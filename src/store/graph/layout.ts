@@ -21,11 +21,20 @@ const ROOT_START_ANGLE = -Math.PI / 2
 const MARGIN = 0.45
 /** A node whose drawing has not been measured yet is taken to be this big. */
 const DEFAULT_REACH = 0.5
-/** How fast a node closes in on its place, per second. */
-const GLIDE_RATE = 9
-const MIN_DT = 0.001
-const MAX_DT = 0.05
+/**
+ * The motion: every node is a mass on a spring anchored to its place, with
+ * just enough damping to settle without a bounce. Speed builds up and dies
+ * down smoothly, and a place that moves mid-flight is simply followed.
+ */
+/** The spring's natural frequency, in radians per second: about a second to settle. */
+const SPRING_OMEGA = 6
+/** Damping ratio: 1 is critical, the fastest settle without overshoot. */
+const SPRING_DAMPING = 1
+/** The simulation never steps further than this, for stability. */
+const MAX_STEP = 1 / 60
+const MAX_FRAME = 0.1
 const SETTLED_DISTANCE = 0.0005
+const SETTLED_SPEED = 0.002
 
 // ── What each node takes on the page ────────────────────────────────────────
 
@@ -211,23 +220,24 @@ function isFrozenExpanding(node: Node, nowMs: number) {
   return !!node.expanding && !!node.expandStartAt && nowMs < node.expandStartAt
 }
 
-/** Moves every node a step closer to its place. */
+/** Advances the springs by a frame: every node moves a step towards its place. */
 export function tickLayoutReducer(state: GraphState, delta: number): GraphState | Partial<GraphState> {
   if (state.nodes.length <= 1) return state
 
-  const dt = Math.min(Math.max(delta, MIN_DT), MAX_DT)
   const nowMs = Date.now()
   const nodes = state.nodes
   const byId = new Map(nodes.map((node) => [node.id, node]))
   const targets = computeTargets(nodes)
-  const glide = 1 - Math.exp(-GLIDE_RATE * dt)
   let changed = false
 
   const updated = nodes.map((node): Node => {
     let target: Vec2 | undefined
 
     if (isFrozenExpanding(node, nowMs)) {
-      target = node.spawnFrom
+      // Waiting its turn on its parent: no motion yet.
+      if (node.position[0] === node.spawnFrom[0] && node.position[1] === node.spawnFrom[1] && !node.velocity) return node
+      changed = true
+      return { ...node, position: [...node.spawnFrom], velocity: undefined }
     } else if (node.collapseRole === 'target') {
       // Folding away: back into the parent, once its turn has come.
       if (node.collapseStartAt && nowMs < node.collapseStartAt) return node
@@ -237,15 +247,32 @@ export function tickLayoutReducer(state: GraphState, delta: number): GraphState 
     }
     if (!target) return node
 
-    const dx = target[0] - node.position[0]
-    const dy = target[1] - node.position[1]
-    if (Math.abs(dx) < SETTLED_DISTANCE && Math.abs(dy) < SETTLED_DISTANCE) {
-      if (node.position[0] === target[0] && node.position[1] === target[1]) return node
+    let [x, y] = node.position
+    let [vx, vy] = node.velocity ?? [0, 0]
+    let remaining = Math.min(delta, MAX_FRAME)
+    while (remaining > 0) {
+      const dt = Math.min(remaining, MAX_STEP)
+      remaining -= dt
+      const ax = SPRING_OMEGA * SPRING_OMEGA * (target[0] - x) - 2 * SPRING_DAMPING * SPRING_OMEGA * vx
+      const ay = SPRING_OMEGA * SPRING_OMEGA * (target[1] - y) - 2 * SPRING_DAMPING * SPRING_OMEGA * vy
+      vx += ax * dt
+      vy += ay * dt
+      x += vx * dt
+      y += vy * dt
+    }
+
+    const settled =
+      Math.abs(target[0] - x) < SETTLED_DISTANCE &&
+      Math.abs(target[1] - y) < SETTLED_DISTANCE &&
+      Math.abs(vx) < SETTLED_SPEED &&
+      Math.abs(vy) < SETTLED_SPEED
+    if (settled) {
+      if (node.position[0] === target[0] && node.position[1] === target[1] && !node.velocity) return node
       changed = true
-      return { ...node, position: [target[0], target[1]] }
+      return { ...node, position: [target[0], target[1]], velocity: undefined }
     }
     changed = true
-    return { ...node, position: [node.position[0] + dx * glide, node.position[1] + dy * glide] }
+    return { ...node, position: [x, y], velocity: [vx, vy] }
   })
 
   return changed ? { nodes: updated } : state

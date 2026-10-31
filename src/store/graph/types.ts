@@ -16,6 +16,8 @@ export interface Node {
   collapseReverseRequested?: boolean
   collapseStartAt?: number
   position: Vec2
+  /** Current speed, in graph units per second, for the spring that carries the node to its place. */
+  velocity?: Vec2
   label: string
   depth: number
   spawnFrom: Vec2
