@@ -28,22 +28,23 @@ export function getNodeLookup(templateKey: string, language: Language): string |
   return nodeLookups[language][templateKey] ?? nodeLookups.en[templateKey]
 }
 
-/** A title's pictogram, ready to draw: see portfolio/nodes/icons.ts. */
+/** A title's logo, ready to draw: see portfolio/nodes/icons.ts. */
 export interface LabelPicture {
   url: string
   /** Width over height. */
   aspect: number
   /** Height as a fraction of the font size, when the default does not suit. */
   scale?: number
-  /** A logo is drawn as an image, in its own colours; a pictogram as a mask in the ink colour. */
-  colour: boolean
 }
 
+/**
+ * Only the logos are shown here, in their own colours: the 3D site's line
+ * pictograms (a Lucide icon name in the data) are left out of the 2D site.
+ */
 export function getLabelPicture(templateKey: string): LabelPicture | null {
   const icon = labelIconByTemplateKey[templateKey]
-  if (!icon) return null
-  if (typeof icon === 'string') return { url: resolveAssetPath(`icons/${icon}.svg`), aspect: 1, colour: false }
-  return { url: resolveAssetPath(`icons/${icon.image}`), aspect: icon.aspect, scale: icon.scale, colour: true }
+  if (!icon || typeof icon === 'string') return null
+  return { url: resolveAssetPath(`icons/${icon.image}`), aspect: icon.aspect, scale: icon.scale }
 }
 
 /** Resolves a portfolio-relative asset path against the app's base URL. */
@@ -52,7 +53,6 @@ export function resolveAssetPath(relativePath: string): string {
 }
 
 export const emailPrivateSvgPath = resolveAssetPath('private-contact/email.svg')
-export const emailLetterSvgPath = resolveAssetPath('mail-letter.svg')
 
 export const copy = {
   fr: {

@@ -7,7 +7,6 @@ import { UNIT, getView } from './viewport'
 import { setNodeBox } from '../store/graph/layout'
 import {
   copy,
-  emailLetterSvgPath,
   emailPrivateSvgPath,
   getCardContent,
   getLabelPicture,
@@ -40,13 +39,12 @@ interface GraphNodeProps {
   isWobbling: boolean
 }
 
-/** The contact leaf: a letter and the address, drawn at build time from a secret. */
+/** The contact leaf: the address, drawn at build time from a secret. */
 function EmailLeaf({ language }: { language: Language }) {
   const text = copy[language]
   const [missing, setMissing] = useState(false)
   return (
     <div className="leaf email is-disabled">
-      <img className="letter" src={emailLetterSvgPath} alt="" draggable={false} />
       {missing ? (
         <span className="address-missing">{text.emailMissing}</span>
       ) : (

@@ -310,15 +310,6 @@ a.leaf:hover .cta,
   color: var(--fg);
 }
 
-/* A Lucide pictogram, drawn as a mask so it takes the ink colour. */
-.pictogram {
-  display: inline-block;
-  height: 1em;
-  background: currentColor;
-  mask: var(--icon) center / contain no-repeat;
-  -webkit-mask: var(--icon) center / contain no-repeat;
-}
-
 /* A logo, in its own colours. */
 .logo {
   display: inline-block;
@@ -358,12 +349,6 @@ a.leaf,
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.email .letter {
-  width: 24px;
-  height: 24px;
-  filter: invert(var(--icon-invert));
 }
 
 .email .address {

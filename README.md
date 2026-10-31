@@ -37,9 +37,9 @@ site's data layer, so the two can be kept in sync by copying the folder:
 - `cards/en.ts` — the cards of the leaves (`cards/fr.ts` likewise unused);
 - `seo.ts` — titles, description, structured data.
 
-Pictograms are Lucide icons copied into `public/icons/` by `npm run icons`;
-they are drawn as masks in the ink colour. Logos and preview pictures keep
-their colours, and links the blue of the 3D site.
+Only the logos among the node pictograms are shown (the 3D site's line
+icons are left out); they and the preview pictures keep their colours, and
+links the blue of the 3D site.
 
 ## Email address
 
