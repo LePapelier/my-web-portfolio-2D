@@ -42,7 +42,8 @@ export const labelIconByTemplateKey: Record<string, LabelIcon> = {
   'centurion-poker': { image: 'poker-chip.svg', aspect: 1 },
   'centurion-scheduler': 'cog',
   'project-portfolio': 'orbit',
-  'exp-internship-2': 'microscope',
+  // Le logo de l'IRISA, en bleu.
+  'exp-internship-2': { image: 'irisa.png', aspect: 0.82, scale: 1.3 },
   // Le logo de l'IRT SystemX : un S noir, blanc sur le thème sombre, et un X bleu.
   'exp-internship-1': { image: 'systemx.png', aspect: 1, scale: 1.05, darkImage: 'systemx-dark.png' },
 }
