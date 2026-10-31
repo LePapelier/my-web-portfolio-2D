@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react'
-import type { KeyboardEvent, MouseEvent } from 'react'
+import type { KeyboardEvent, MouseEvent, PointerEvent } from 'react'
 import { useGraphStore } from '../store/useGraphStore'
 import type { Language, Node } from '../store/graph/types'
 import { pitchFromKey, playSound, staggerFromKey } from '../lib/sound'
@@ -16,11 +16,16 @@ import {
 import { GithubMark } from '../components/Icons'
 import CardNode from './CardNode'
 import Picture from './Picture'
-import { useNodeDrag } from './useNodeDrag'
 
-/** Pixels a press may travel and still count as a click. */
-const DRAG_THRESHOLD_PX = 5
-const CARD_DRAG_THRESHOLD_PX = 18
+/** Where a disc's title goes: away from the root, so it never sits on the edge. */
+type LabelSide = 'above' | 'below' | 'left' | 'right'
+
+function labelSideFor(position: [number, number], isMain: boolean): LabelSide {
+  if (isMain) return 'above'
+  const [x, y] = position
+  if (Math.abs(y) >= Math.abs(x) * 0.6) return y < 0 ? 'above' : 'below'
+  return x < 0 ? 'left' : 'right'
+}
 
 interface GraphNodeProps {
   node: Node
@@ -120,8 +125,6 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
     if (collapsing) setIsCardOpen(false)
   }
 
-  const drag = useNodeDrag(id, isMain || isFocused, isCard ? CARD_DRAG_THRESHOLD_PX : DRAG_THRESHOLD_PX)
-
   const activate = () => {
     if (isReopenable) {
       expandNode(id)
@@ -138,22 +141,17 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
     if (isDisc) expandNode(id)
   }
 
-  const onClick = (event: MouseEvent) => {
-    if (drag.consumeSuppressedClick()) {
-      event.preventDefault()
-      return
-    }
-    activate()
-  }
-
-  /** A leaf is a link: the browser opens it, with a sound, unless the press was a drag. */
+  /** A leaf is a link: the browser opens it, with a sound. */
   const onLinkClick = (event: MouseEvent) => {
-    if (drag.consumeSuppressedClick() || isInert) {
+    if (isInert) {
       event.preventDefault()
       return
     }
     playSound('link')
   }
+
+  /** A press on a node is for the node: the viewport must not start panning. */
+  const onPointerDown = (event: PointerEvent) => event.stopPropagation()
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key !== 'Enter' && event.key !== ' ') return
@@ -187,7 +185,10 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
   if (isDisc) {
     const diameter = radius * 2 * UNIT
     const ringWidth = expanded ? (radius - Math.max(radius * 0.58, 0.03)) * UNIT : 0
-    const labelLift = radius * UNIT + (isMain ? 26 : 22)
+    const side = labelSideFor(position, isMain)
+    const gap = radius * UNIT + (isMain ? 26 : 20)
+    const labelStyle =
+      side === 'above' ? { top: -gap } : side === 'below' ? { top: gap } : side === 'left' ? { left: -gap } : { left: gap }
     body = (
       <>
         <div
@@ -197,10 +198,10 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
           aria-expanded={!!expanded}
           aria-label={`${expanded ? text.collapse : text.expand} : ${label}`}
           style={{ width: diameter, height: diameter, borderWidth: ringWidth }}
-          onClick={onClick}
+          onClick={activate}
           onKeyDown={onKeyDown}
         />
-        <div className="disc-label" style={{ top: -labelLift }}>
+        <div className={`disc-label is-${side}`} style={labelStyle}>
           <span className={`title${isMain ? ' is-main' : ''}`}>
             <Picture picture={picture} />
             {label}
@@ -218,9 +219,7 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
         language={language}
         isOpen={isCardOpen}
         isFocused={isFocused}
-        onToggle={() => {
-          if (!drag.consumeSuppressedClick()) activate()
-        }}
+        onToggle={activate}
         onToggleFocus={onToggleFocus}
       />
     )
@@ -269,7 +268,7 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
         className={bodyClass}
         onPointerEnter={onPointerEnter}
         onPointerLeave={onPointerLeave}
-        onPointerDown={drag.onPointerDown}
+        onPointerDown={onPointerDown}
       >
         {body}
       </div>

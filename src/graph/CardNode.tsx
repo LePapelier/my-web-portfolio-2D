@@ -8,8 +8,7 @@ import type { LabelPicture } from './content'
 import { ChevronIcon, FocusIcon } from '../components/Icons'
 import Picture from './Picture'
 
-/** Card width at zoom 1, in pixels: closed, and open as the text grows. */
-const CARD_CLOSED_WIDTH = 170
+/** Card width at zoom 1, in pixels, growing a little with the text. */
 const CARD_OPEN_BASE_WIDTH = 260
 const CARD_OPEN_MAX_WIDTH = 340
 const CARD_WIDTH_PER_CHAR = 0.7
@@ -27,8 +26,9 @@ interface CardNodeProps {
 }
 
 /**
- * A leaf with something to say: its title above, and a panel with a one-line
- * summary that unfolds, on a click, into a picture, a few bullets and a link.
+ * A leaf with something to say: its title, and under it a "details" pill
+ * that opens, on a click, into a panel with a summary, a picture, a few
+ * bullets and a link.
  */
 function CardNode({ id, label, picture, content, language, isOpen, isFocused, onToggle, onToggleFocus }: CardNodeProps) {
   const text = copy[language]
@@ -55,54 +55,56 @@ function CardNode({ id, label, picture, content, language, isOpen, isFocused, on
         </span>
       </div>
 
-      <div className={`card${isOpen ? ' is-open' : ''}`} style={{ width: isOpen ? openWidth : CARD_CLOSED_WIDTH }}>
-        <button type="button" className="card-toggle" aria-expanded={isOpen} onClick={onToggle}>
-          <p className="card-summary">{content.summaryText}</p>
-          <span className="card-chip">
-            {text.details}
-            <ChevronIcon />
-          </span>
-        </button>
-
-        <div className="card-details" inert={!isOpen}>
-          <div>
-            <div className="card-details-inner">
-              {preview && (
-                <img
-                  className="card-preview"
-                  src={resolveAssetPath(preview.src)}
-                  alt={preview.alt}
-                  style={{ aspectRatio: preview.aspectRatio }}
-                  loading="lazy"
-                  draggable={false}
-                />
-              )}
-              {lines.length > 0 && (
-                <ul className="card-list">
-                  {lines.map((segments, index) => (
-                    <li key={index}>
-                      {segments.map((segment, segmentIndex) =>
-                        segment.url ? (
-                          <a key={segmentIndex} href={segment.url} target="_blank" rel="noopener noreferrer" onClick={onLinkClick}>
-                            {segment.text}
-                          </a>
-                        ) : (
-                          <span key={segmentIndex}>{segment.text}</span>
-                        ),
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {content.link && (
-                <a className="card-open" href={content.link.url} target="_blank" rel="noopener noreferrer" onClick={onLinkClick}>
-                  {content.link.label ?? text.open}
-                </a>
-              )}
-            </div>
+      {isOpen ? (
+        <div className="card" style={{ width: openWidth }}>
+          <button type="button" className="card-toggle" aria-expanded onClick={onToggle}>
+            <span className="card-chip">
+              {text.details}
+              <ChevronIcon />
+            </span>
+          </button>
+          <div className="card-body">
+            <p className="card-summary">{content.summaryText}</p>
+            {preview && (
+              <img
+                className="card-preview"
+                src={resolveAssetPath(preview.src)}
+                alt={preview.alt}
+                style={{ aspectRatio: preview.aspectRatio }}
+                loading="lazy"
+                draggable={false}
+              />
+            )}
+            {lines.length > 0 && (
+              <ul className="card-list">
+                {lines.map((segments, index) => (
+                  <li key={index}>
+                    {segments.map((segment, segmentIndex) =>
+                      segment.url ? (
+                        <a key={segmentIndex} href={segment.url} target="_blank" rel="noopener noreferrer" onClick={onLinkClick}>
+                          {segment.text}
+                        </a>
+                      ) : (
+                        <span key={segmentIndex}>{segment.text}</span>
+                      ),
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {content.link && (
+              <a className="card-open" href={content.link.url} target="_blank" rel="noopener noreferrer" onClick={onLinkClick}>
+                {content.link.label ?? text.open}
+              </a>
+            )}
           </div>
         </div>
-      </div>
+      ) : (
+        <button type="button" className="card-chip card-pill" aria-expanded={false} onClick={onToggle}>
+          {text.details}
+          <ChevronIcon />
+        </button>
+      )}
 
       {isOpen && (
         <button

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { defaultLanguage, getMainNodeLabel, getNodeLabel, initialNodes } from './graph/config'
 import { expandNodeReducer } from './graph/expandNode'
-import { tickPhysicsReducer } from './graph/physics'
+import { tickLayoutReducer } from './graph/layout'
 import type { GraphState, Language, Node } from './graph/types'
 
 export type { GraphState, Node }
@@ -31,7 +31,6 @@ function getInitialLanguage(): Language {
 
 export const useGraphStore = create<GraphState>((set) => ({
   language: getInitialLanguage(),
-  draggedNodeId: null,
   hoveredNodeId: null,
   focusedCardNodeId: null,
   nodes: initialNodes,
@@ -54,22 +53,5 @@ export const useGraphStore = create<GraphState>((set) => ({
     }),
   setHoveredNode: (id) => set({ hoveredNodeId: id }),
   setFocusedCardNodeId: (id) => set({ focusedCardNodeId: id }),
-  startDragging: (id) =>
-    set((state) => {
-      const node = state.nodes.find((candidate) => candidate.id === id)
-      if (!node || node.id === 'main') return state
-      return { draggedNodeId: id }
-    }),
-  stopDragging: () => set({ draggedNodeId: null }),
-  moveNode: (id, position) =>
-    set((state) => {
-      const index = state.nodes.findIndex((node) => node.id === id)
-      if (index === -1 || id === 'main') return state
-      const current = state.nodes[index]
-      if (current.position[0] === position[0] && current.position[1] === position[1]) return state
-      const nodes = [...state.nodes]
-      nodes[index] = { ...current, position, velocity: [0, 0] }
-      return { nodes }
-    }),
-  tickPhysics: (delta) => set((state) => tickPhysicsReducer(state, delta)),
+  tickLayout: (delta) => set((state) => tickLayoutReducer(state, delta)),
 }))

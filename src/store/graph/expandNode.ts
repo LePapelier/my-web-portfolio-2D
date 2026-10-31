@@ -5,7 +5,6 @@ import {
   getNodeRadius,
   getPortfolioStructure,
   getNodeVisualType,
-  isCardTemplate,
 } from './config'
 import type { GraphState, Node, Vec2 } from './types'
 
@@ -216,22 +215,20 @@ export function expandNodeReducer(
   const expandStartedAt = Date.now()
   const waveSlots = shuffleWaveSlots(childDefinitions.length)
 
-  // Children start on their parent and are pushed out by the simulation once
-  // their turn in the wave comes.
+  // Children start on their parent and glide out to their place once their
+  // turn in the wave comes.
   const children: Node[] = childDefinitions.map((childDef, index) => {
     const spawnOrigin = createSpawnOrigin(parent.position)
     return {
       id: `${id}-${childDef.key}`,
       templateKey: childDef.key,
       visualType: getNodeVisualType(childDef.key),
-      isCard: isCardTemplate(childDef.key),
       href: childDef.href,
       expanding: true,
       expandStartAt: expandStartedAt + waveSlots[index] * expandWaveStepMs,
       collapsing: false,
       label: getNodeLabel(childDef.key, state.language),
       position: spawnOrigin,
-      velocity: [0, 0],
       spawnFrom: spawnOrigin,
       parentId: parent.id,
       depth: parent.depth + 1,

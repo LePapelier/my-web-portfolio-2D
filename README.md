@@ -1,12 +1,20 @@
 # My web portfolio, in 2D
 
 The black-and-white, flat version of my [3D portfolio](https://github.com/LePapelier/LePapelier.github.io):
-the same graph of nodes to unfold, the same cards, both languages, the same
+the same tree of nodes to unfold, the same cards, both languages, the same
 sounds, drawn in plain HTML and SVG rather than WebGL. Ink on paper by day,
 chalk on slate by night: the theme follows the system, and a button in the
 corner overrides it.
 
-The flight mode of the 3D site has no counterpart here.
+The tree is laid out radially: each branch owns a sector around the root and
+its children sit further out inside it, so no two edges ever cross. A branch
+being unfolded takes room from its closed siblings, and the view glides to
+keep the whole tree on the screen. A closed card is just its title and a
+"details" pill; it opens into a panel, which a button can enlarge to fill the
+screen.
+
+The flight mode of the 3D site has no counterpart here, nor do its extra
+cross-branch edges, which a planar drawing cannot have.
 
 ## Running it
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { useGraphStore } from '../store/useGraphStore'
 import type { Node } from '../store/graph/types'
-import { symmetricEdges } from '../store/graph/config'
+import { computeTargets } from '../store/graph/layout'
 import { playSound } from '../lib/sound'
 import { reducedMotion } from '../lib/motion'
 import {
@@ -26,13 +26,15 @@ import type { View } from './viewport'
 import { copy } from './content'
 import GraphNode from './GraphNode'
 
-/** Seconds between two steps of the simulation. */
-const PHYSICS_STEP = 1 / 40
 /** Milliseconds of stillness before the root starts to beckon, then to say so. */
 const START_HINT_WOBBLE_DELAY_MS = 5000
 const START_HINT_TEXT_DELAY_MS = 10000
 /** Share of the viewport a focused card fills. */
 const FOCUS_FILL = 0.9
+/** Room kept around the tree when the view is fitted to it, in graph units. */
+const FIT_PADDING = 1.7
+/** The fit never zooms in past this: a small tree stays at its natural size. */
+const FIT_MAX_ZOOM = 1
 /** Wheel: one notch of 100 zooms by about 16%. */
 const WHEEL_ZOOM_RATE = 0.0015
 
@@ -40,18 +42,20 @@ interface Edge {
   key: string
   from: Node
   to: Node
-  symmetric: boolean
 }
 
-/** Trims an edge so it stops at the rim of a disc rather than at its centre. */
+/** How far an edge stops short of a leaf's centre, so it ends under its title. */
+const LEAF_INSET = 0.55
+
+/** Trims an edge so it stops at the rim of a disc or the edge of a leaf. */
 function edgeEnds(edge: Edge): [number, number, number, number] | null {
   const [x1, y1] = edge.from.position
   const [x2, y2] = edge.to.position
   const dx = x2 - x1
   const dy = y2 - y1
   const length = Math.hypot(dx, dy)
-  const fromInset = edge.from.visualType === 'disc' ? (edge.from.radius ?? 0) : 0
-  const toInset = edge.to.visualType === 'disc' ? (edge.to.radius ?? 0) : 0
+  const fromInset = edge.from.visualType === 'disc' ? (edge.from.radius ?? 0) : LEAF_INSET
+  const toInset = edge.to.visualType === 'disc' ? (edge.to.radius ?? 0) : LEAF_INSET
   if (length <= fromInset + toInset + 0.01) return null
   const ux = dx / length
   const uy = dy / length
@@ -82,7 +86,7 @@ export default function GraphView() {
   const hoveredNodeId = useGraphStore((state) => state.hoveredNodeId)
   const focusedCardNodeId = useGraphStore((state) => state.focusedCardNodeId)
   const setFocusedCardNodeId = useGraphStore((state) => state.setFocusedCardNodeId)
-  const tickPhysics = useGraphStore((state) => state.tickPhysics)
+  const tickLayout = useGraphStore((state) => state.tickLayout)
 
   const viewportRef = useRef<HTMLDivElement | null>(null)
   const worldRef = useRef<HTMLDivElement | null>(null)
@@ -104,29 +108,19 @@ export default function GraphView() {
   const rootNode = useMemo(() => nodes.find((node) => node.id === 'main') ?? null, [nodes])
   const isRootExpanded = !!rootNode?.expanded
   const nodeById = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes])
-  const firstNodeByTemplateKey = useMemo(() => {
-    const byKey = new Map<string, Node>()
-    nodes.forEach((node) => {
-      if (!byKey.has(node.templateKey)) byKey.set(node.templateKey, node)
-    })
-    return byKey
-  }, [nodes])
 
+  // The tree's own edges only: the 3D site's extra, cross-branch edges would
+  // have to cross the others, and this layout promises none do.
   const edges = useMemo(() => {
     const list: Edge[] = []
     nodes.forEach((node) => {
       node.childrenIds?.forEach((childId) => {
         const child = nodeById.get(childId)
-        if (child) list.push({ key: `${node.id}>${child.id}`, from: node, to: child, symmetric: false })
+        if (child) list.push({ key: `${node.id}>${child.id}`, from: node, to: child })
       })
     })
-    symmetricEdges.forEach(([fromKey, toKey]) => {
-      const from = firstNodeByTemplateKey.get(fromKey)
-      const to = firstNodeByTemplateKey.get(toKey)
-      if (from && to) list.push({ key: `${from.id}~${to.id}`, from, to, symmetric: true })
-    })
     return list
-  }, [firstNodeByTemplateKey, nodeById, nodes])
+  }, [nodeById, nodes])
 
   // The world element gets its transform straight from the viewport module.
   useLayoutEffect(() => {
@@ -148,25 +142,20 @@ export default function GraphView() {
     return () => observer.disconnect()
   }, [])
 
-  // The frame loop: the simulation at a fixed step, the view's glides, and
-  // the follow of a focused card.
+  // The frame loop: the nodes' glides to their places, the view's glides,
+  // and the follow of a focused card.
   useEffect(() => {
     let frame = 0
     let last = performance.now()
-    let accumulator = 0
 
     const loop = (now: number) => {
-      accumulator += Math.min((now - last) / 1000, 0.1)
+      tickLayout((now - last) / 1000)
       last = now
-      if (accumulator >= PHYSICS_STEP) {
-        tickPhysics(PHYSICS_STEP)
-        accumulator = Math.min(accumulator - PHYSICS_STEP, PHYSICS_STEP)
-      }
 
       tickView(now)
 
-      // A focused card keeps its place on the screen even if the simulation
-      // moves it: the glide aims at where it is now, and the view follows after.
+      // A focused card keeps its place on the screen even if the layout moves
+      // it: the glide aims at where it is now, and the view follows after.
       const focusedId = focusedCardNodeIdRef.current
       const offset = followOffsetRef.current
       if (focusedId && offset) {
@@ -188,7 +177,7 @@ export default function GraphView() {
 
     frame = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(frame)
-  }, [tickPhysics])
+  }, [tickLayout])
 
   // Once the root opens, the start hint is over for good.
   if (isRootExpanded && (showStartHint || showStartHintText)) {
@@ -212,6 +201,31 @@ export default function GraphView() {
       window.clearTimeout(text)
     }
   }, [])
+
+  // Whenever a branch opens or closes, the view glides so that the whole
+  // tree, where its nodes are heading, fits on the screen.
+  const structureKey = nodes.map((node) => node.id).join('|')
+  useEffect(() => {
+    if (focusedCardNodeIdRef.current) return
+    const current = useGraphStore.getState().nodes
+    const targets = computeTargets(current)
+    let left = Infinity
+    let top = Infinity
+    let right = -Infinity
+    let bottom = -Infinity
+    targets.forEach(([x, y]) => {
+      left = Math.min(left, x)
+      top = Math.min(top, y)
+      right = Math.max(right, x)
+      bottom = Math.max(bottom, y)
+    })
+    if (!Number.isFinite(left)) return
+    const { width, height } = getViewportSize()
+    const spanX = right - left + FIT_PADDING * 2
+    const spanY = bottom - top + FIT_PADDING * 2
+    const k = Math.min(FIT_MAX_ZOOM, width / (spanX * UNIT), height / (spanY * UNIT))
+    glideTo({ x: (left + right) / 2, y: (top + bottom) / 2, k })
+  }, [structureKey])
 
   // Clear focus when the focused card starts collapsing or disappears.
   useEffect(() => {
@@ -360,9 +374,7 @@ export default function GraphView() {
             if (!ends) return null
             const highlighted =
               hoveredNodeId !== null && (edge.from.id === hoveredNodeId || edge.to.id === hoveredNodeId)
-            const edgeClass = ['edge', edge.symmetric ? 'is-symmetric' : '', highlighted ? 'is-highlighted' : '']
-              .filter(Boolean)
-              .join(' ')
+            const edgeClass = highlighted ? 'edge is-highlighted' : 'edge'
             return (
               <line
                 key={edge.key}

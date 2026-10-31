@@ -166,10 +166,6 @@ a {
   transition: stroke 0.16s ease, stroke-width 0.16s ease, opacity 0.35s ease;
 }
 
-.edge.is-symmetric {
-  stroke-dasharray: 8 6;
-}
-
 .edge.is-highlighted {
   stroke: var(--fg);
   stroke-width: 3px;
@@ -284,6 +280,23 @@ a {
   white-space: nowrap;
   pointer-events: none;
   transition: transform 0.16s ease;
+}
+
+/* Beside the disc, the title hangs off it rather than sitting centred on it. */
+.disc-label.is-left {
+  transform: translate(-100%, -50%);
+}
+
+.disc-label.is-right {
+  transform: translate(0, -50%);
+}
+
+.node-body.is-hovered .disc-label.is-left {
+  transform: translate(-100%, -50%) scale(1.11);
+}
+
+.node-body.is-hovered .disc-label.is-right {
+  transform: translate(0, -50%) scale(1.11);
 }
 
 .title {
@@ -403,80 +416,53 @@ a.leaf,
   position: absolute;
   left: 0;
   top: 0;
-  /* The closed card is centred on the node; it grows downwards. */
-  transform: translate(-50%, -26px);
+  /* Centred on the node: the title and the pill sit either side of it. */
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   transition: transform 0.16s ease;
 }
 
+.card-node.is-open {
+  /* Open, the panel hangs below the title, which stays where it was. */
+  transform: translate(-50%, -24px);
+}
+
 .node-body.is-hovered .card-node:not(.is-open) {
-  transform: translate(-50%, -26px) scale(1.06);
+  transform: translate(-50%, -50%) scale(1.08);
 }
 
 .card-head {
-  position: absolute;
-  left: 50%;
-  bottom: 100%;
-  transform: translateX(-50%);
-  margin-bottom: 10px;
   text-align: center;
   white-space: nowrap;
   pointer-events: none;
+  margin-bottom: 8px;
 }
 
 .card-head .title {
   font-size: 18px;
 }
 
-.card {
-  position: relative;
-  width: 170px;
-  border: 1px solid var(--fg);
-  border-radius: 12px;
-  background: var(--panel);
-  text-align: left;
-  overflow: hidden;
-  transition: width 0.36s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
-}
-
-.card.is-open {
-  box-shadow: 0 0 0 1px var(--bg), 0 12px 40px -12px var(--fg);
-}
-
-.card-toggle {
-  display: block;
-  width: 100%;
-  padding: 12px 14px 10px;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-
-.card-summary {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.35;
-  transition: font-size 0.36s ease;
-}
-
-.card.is-open .card-summary {
-  font-size: 14px;
-}
-
 .card-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 10px;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
+  background: var(--panel);
   font-size: 11px;
   letter-spacing: 0.06em;
   color: var(--ink-soft);
   transition: color 0.15s ease, border-color 0.15s ease;
 }
 
+.card-pill {
+  cursor: pointer;
+}
+
+.card-pill:hover,
 .card-toggle:hover .card-chip {
   color: var(--fg);
   border-color: var(--fg);
@@ -488,35 +474,59 @@ a.leaf,
   transition: transform 0.3s ease;
 }
 
-.card.is-open .card-chip svg {
+.card.is-open .card-chip svg,
+.card .card-chip svg {
   transform: rotate(180deg);
 }
 
-/* The details unfold with the 0fr → 1fr grid trick. */
-.card-details {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.36s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.card.is-open .card-details {
-  grid-template-rows: 1fr;
-}
-
-.card-details > div {
+.card {
+  position: relative;
+  border: 1px solid var(--fg);
+  border-radius: 12px;
+  background: var(--panel);
+  text-align: left;
   overflow: hidden;
-  min-height: 0;
+  box-shadow: 0 0 0 1px var(--bg), 0 12px 40px -12px var(--fg);
+  transform-origin: 50% 0;
+  animation: unfold 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.card-details-inner {
-  padding: 0 14px 14px;
+@keyframes unfold {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.card-toggle {
+  display: block;
+  width: 100%;
+  padding: 12px 14px 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.card-body {
+  padding: 10px 14px 14px;
+}
+
+.card-summary {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.35;
 }
 
 .card-preview {
   display: block;
   width: 100%;
   height: auto;
-  margin: 4px 0 12px;
+  margin: 0 0 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--ink-faint);

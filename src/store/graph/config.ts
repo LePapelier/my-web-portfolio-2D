@@ -1,7 +1,6 @@
 import type { Language, Node, PortfolioChild } from './types'
 import { mainNodeLabel, nodeLabels } from '../../../portfolio/nodes/labels'
-import { graphStructure, symmetricEdges as portfolioSymmetricEdges } from '../../../portfolio/nodes/structure'
-import { cardContentEn } from '../../../portfolio/cards/en'
+import { graphStructure } from '../../../portfolio/nodes/structure'
 
 export const defaultLanguage: Language = 'en'
 
@@ -31,8 +30,6 @@ export const collapseDurationMs = 300
 /** Milliseconds between two siblings popping out. */
 export const expandWaveStepMs = 140
 
-export const symmetricEdges: [string, string][] = portfolioSymmetricEdges
-
 export function hasChildren(templateKey: string): boolean {
   return (graphStructure[templateKey]?.length ?? 0) > 0
 }
@@ -41,10 +38,6 @@ export function getNodeVisualType(templateKey: string): Node['visualType'] {
   return hasChildren(templateKey) ? 'disc' : 'text'
 }
 
-/** Whether a leaf opens as a card: it has content, and is not the contact. */
-export function isCardTemplate(templateKey: string): boolean {
-  return !hasChildren(templateKey) && templateKey !== 'mail' && templateKey in cardContentEn
-}
 
 /**
  * How many levels hang under a template key: 0 for a leaf, 1 for a branch of
@@ -86,7 +79,6 @@ export const initialNodes: Node[] = [
     visualType: getNodeVisualType('root'),
     expanding: false,
     position: [0, 0],
-    velocity: [0, 0],
     spawnFrom: [0, 0],
     depth: 0,
     label: getMainNodeLabel(defaultLanguage),
