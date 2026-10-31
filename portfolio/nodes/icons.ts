@@ -28,8 +28,9 @@ export const labelIconByTemplateKey: Record<string, LabelIcon> = {
   'about-location': 'map-pin',
   // Le logo de la thèse : bouclier, cadenas et piment.
   phd: { image: 'these.webp', aspect: 216 / 264, scale: 1.6 },
-  'diploma-1': 'graduation-cap',
-  'diploma-2': 'graduation-cap',
+  // Le logo INSA, rouge et gris, devant les deux diplômes.
+  'diploma-1': { image: 'insa.webp', aspect: 895 / 360, scale: 0.8 },
+  'diploma-2': { image: 'insa.webp', aspect: 895 / 360, scale: 0.8 },
   'centurion-paper': 'scissors',
   'centurion-scrabble': { image: 'scrabble-tile.svg', aspect: 1 },
   'centurion-poker': { image: 'poker-chip.svg', aspect: 1 },
