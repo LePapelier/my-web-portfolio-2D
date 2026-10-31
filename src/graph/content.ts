@@ -35,7 +35,7 @@ export interface LabelPicture {
   aspect: number
   /** Height as a fraction of the font size, when the default does not suit. */
   scale?: number
-  /** A logo is drawn as an image, in shades of grey; a pictogram as a mask in the ink colour. */
+  /** A logo is drawn as an image, in its own colours; a pictogram as a mask in the ink colour. */
   colour: boolean
 }
 

@@ -7,7 +7,7 @@ const LOGO_SCALE = 1.15
 
 /**
  * A title's pictogram: a Lucide icon drawn as a mask in the ink colour, or a
- * logo shown in shades of grey.
+ * logo in its own colours.
  */
 export default function Picture({ picture }: { picture: LabelPicture | null }) {
   if (!picture) return null

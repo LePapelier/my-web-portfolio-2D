@@ -30,8 +30,8 @@ site's data layer, so the two can be kept in sync by copying the folder:
 - `seo.ts` — titles, description, structured data.
 
 Pictograms are Lucide icons copied into `public/icons/` by `npm run icons`;
-they are drawn as masks in the ink colour. Logos and preview pictures are shown
-in shades of grey.
+they are drawn as masks in the ink colour. Logos and preview pictures keep
+their colours, and links the blue of the 3D site.
 
 ## Email address
 
