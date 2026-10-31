@@ -26,7 +26,7 @@ export const nodeLabels: Record<Language, Record<string, string>> = {
     'teaching-algorithms': 'Algorithms',
     'teaching-algorithmic-methods': 'Algorithmic methods',
     'teaching-programming': 'Programming',
-    'teaching-computability': 'Computability',
+    'teaching-computability': 'Computation theory',
     'about-location': 'Rennes, France',
     phd: 'PhD',
     'diploma-1': 'Research master',

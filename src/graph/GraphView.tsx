@@ -1,21 +1,16 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { useGraphStore } from '../store/useGraphStore'
 import type { Node } from '../store/graph/types'
 import { computeTargets, getBoxesVersion, getNodeBox, subscribeBoxes } from '../store/graph/layout'
-import { playSound } from '../lib/sound'
 import { reducedMotion } from '../lib/motion'
 import {
   UNIT,
-  ZOOM_MAX,
   attachWorld,
   getView,
   getViewportSize,
   glideTo,
-  isGliding,
   panBy,
-  retargetGlide,
-  screenToWorld,
   setView,
   setViewportSize,
   subscribeView,
@@ -29,8 +24,6 @@ import GraphNode from './GraphNode'
 /** Milliseconds of stillness before the root starts to beckon, then to say so. */
 const START_HINT_WOBBLE_DELAY_MS = 5000
 const START_HINT_TEXT_DELAY_MS = 10000
-/** Share of the viewport a focused card fills. */
-const FOCUS_FILL = 0.9
 /** Room kept around the tree when the view is fitted to it, in graph units. */
 const FIT_PADDING = 0.6
 /** Milliseconds the fit waits for the drawings to settle before gliding. */
@@ -89,8 +82,6 @@ export default function GraphView() {
   const nodes = useGraphStore((state) => state.nodes)
   const language = useGraphStore((state) => state.language)
   const hoveredNodeId = useGraphStore((state) => state.hoveredNodeId)
-  const focusedCardNodeId = useGraphStore((state) => state.focusedCardNodeId)
-  const setFocusedCardNodeId = useGraphStore((state) => state.setFocusedCardNodeId)
   const tickLayout = useGraphStore((state) => state.tickLayout)
 
   const viewportRef = useRef<HTMLDivElement | null>(null)
@@ -100,15 +91,6 @@ export default function GraphView() {
   const [isPanning, setIsPanning] = useState(false)
   const [showStartHint, setShowStartHint] = useState(false)
   const [showStartHintText, setShowStartHintText] = useState(false)
-
-  // The view saved when a card was focused, and how the view sits relative to
-  // that card, so it follows the card if the simulation moves it.
-  const savedViewRef = useRef<View | null>(null)
-  const followOffsetRef = useRef<{ dx: number; dy: number } | null>(null)
-  const focusedCardNodeIdRef = useRef(focusedCardNodeId)
-  useEffect(() => {
-    focusedCardNodeIdRef.current = focusedCardNodeId
-  }, [focusedCardNodeId])
 
   const rootNode = useMemo(() => nodes.find((node) => node.id === 'main') ?? null, [nodes])
   const isRootExpanded = !!rootNode?.expanded
@@ -147,8 +129,7 @@ export default function GraphView() {
     return () => observer.disconnect()
   }, [])
 
-  // The frame loop: the nodes' glides to their places, the view's glides,
-  // and the follow of a focused card.
+  // The frame loop: the nodes' springs, and the view's glides.
   useEffect(() => {
     let frame = 0
     let last = performance.now()
@@ -158,24 +139,6 @@ export default function GraphView() {
       last = now
 
       tickView(now)
-
-      // A focused card keeps its place on the screen even if the layout moves
-      // it: the glide aims at where it is now, and the view follows after.
-      const focusedId = focusedCardNodeIdRef.current
-      const offset = followOffsetRef.current
-      if (focusedId && offset) {
-        const node = useGraphStore.getState().nodes.find((candidate) => candidate.id === focusedId)
-        if (node) {
-          const x = node.position[0] + offset.dx
-          const y = node.position[1] + offset.dy
-          if (isGliding()) {
-            retargetGlide(x, y)
-          } else {
-            const view = getView()
-            if (Math.abs(x - view.x) > 1e-4 || Math.abs(y - view.y) > 1e-4) setView({ x, y })
-          }
-        }
-      }
 
       frame = requestAnimationFrame(loop)
     }
@@ -215,7 +178,6 @@ export default function GraphView() {
   const boxesVersion = useSyncExternalStore(subscribeBoxes, getBoxesVersion)
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      if (focusedCardNodeIdRef.current) return
       const state = useGraphStore.getState()
       const targets = computeTargets(state.nodes)
       const { width, height } = getViewportSize()
@@ -255,80 +217,8 @@ export default function GraphView() {
     return () => window.clearTimeout(timeout)
   }, [structureKey, boxesVersion])
 
-  // Clear focus when the focused card starts collapsing or disappears.
-  useEffect(() => {
-    if (!focusedCardNodeId) return
-    const node = nodeById.get(focusedCardNodeId)
-    if (!node || node.collapsing) setFocusedCardNodeId(null)
-  }, [focusedCardNodeId, nodeById, setFocusedCardNodeId])
-
-  // Escape leaves a focused card.
-  useEffect(() => {
-    if (!focusedCardNodeId) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setFocusedCardNodeId(null)
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [focusedCardNodeId, setFocusedCardNodeId])
-
-  // The glide to a focused card and back, with a whoosh either way.
-  const previousFocusedRef = useRef<string | null>(null)
-  useEffect(() => {
-    const previous = previousFocusedRef.current
-    previousFocusedRef.current = focusedCardNodeId
-    if (previous === focusedCardNodeId) return
-
-    if (focusedCardNodeId === null) {
-      followOffsetRef.current = null
-      const saved = savedViewRef.current
-      savedViewRef.current = null
-      if (previous !== null) playSound('focusOut')
-      if (saved) glideTo(saved)
-      return
-    }
-
-    playSound('focusIn')
-    const body = worldRef.current?.querySelector<HTMLElement>(`[data-node-id="${CSS.escape(focusedCardNodeId)}"] .node-body`)
-    const node = nodeById.get(focusedCardNodeId)
-    if (!body || !node) return
-
-    if (!savedViewRef.current) savedViewRef.current = { ...getView() }
-
-    // The body itself has no size: its parts are placed around the node's
-    // point. Fit the whole of them: the title above, the card, its button.
-    const parts = [...body.querySelectorAll<HTMLElement>('.card-head, .card, .card-focus')].map((part) =>
-      part.getBoundingClientRect(),
-    )
-    if (parts.length === 0) return
-    const rect = {
-      left: Math.min(...parts.map((part) => part.left)),
-      top: Math.min(...parts.map((part) => part.top)),
-      right: Math.max(...parts.map((part) => part.right)),
-      bottom: Math.max(...parts.map((part) => part.bottom)),
-    }
-    const [left, top] = screenToWorld(rect.left, rect.top)
-    const [right, bottom] = screenToWorld(rect.right, rect.bottom)
-    const { width, height } = getViewportSize()
-    const k = Math.min(ZOOM_MAX, (width * FOCUS_FILL) / ((right - left) * UNIT), (height * FOCUS_FILL) / ((bottom - top) * UNIT))
-    const x = (left + right) / 2
-    const y = (top + bottom) / 2
-    followOffsetRef.current = { dx: x - node.position[0], dy: y - node.position[1] }
-    glideTo({ x, y, k })
-    // The focus animation only depends on the card chosen, not on the layout.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusedCardNodeId])
-
-  const toggleFocus = useCallback(
-    (id: string) => setFocusedCardNodeId(useGraphStore.getState().focusedCardNodeId === id ? null : id),
-    [setFocusedCardNodeId],
-  )
-
   // ── Panning and pinching on the background ────────────────────────────────
-  const isFocused = focusedCardNodeId !== null
-
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (isFocused) return
     const pointers = pointersRef.current
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
     event.currentTarget.setPointerCapture(event.pointerId)
@@ -376,7 +266,6 @@ export default function GraphView() {
     if (!element) return
     const onWheel = (event: WheelEvent) => {
       event.preventDefault()
-      if (focusedCardNodeIdRef.current) return
       const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY
       zoomAt(Math.exp(-delta * WHEEL_ZOOM_RATE), event.clientX, event.clientY)
     }
@@ -384,7 +273,7 @@ export default function GraphView() {
     return () => element.removeEventListener('wheel', onWheel)
   }, [])
 
-  const className = ['viewport', isPanning ? 'is-panning' : '', isFocused ? 'is-focused' : ''].filter(Boolean).join(' ')
+  const className = isPanning ? 'viewport is-panning' : 'viewport'
 
   return (
     <div
@@ -422,9 +311,7 @@ export default function GraphView() {
             node={node}
             language={language}
             isHovered={hoveredNodeId === node.id}
-            isFocused={focusedCardNodeId === node.id}
             isWobbling={node.id === 'main' && showStartHint && !reducedMotion}
-            onToggleFocus={toggleFocus}
           />
         ))}
 

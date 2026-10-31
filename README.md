@@ -1,17 +1,16 @@
 # My web portfolio, in 2D
 
 The black-and-white, flat version of my [3D portfolio](https://github.com/LePapelier/LePapelier.github.io):
-the same tree of nodes to unfold, the same cards, both languages, the same
-sounds, drawn in plain HTML and SVG rather than WebGL. Ink on paper by day,
-chalk on slate by night: the theme follows the system, and a button in the
-corner overrides it.
+the same tree of nodes to unfold, the same cards, the same sounds, drawn in
+plain HTML and SVG rather than WebGL. Ink on paper by day, chalk on slate by
+night: the theme follows the system. This version is in English only.
 
 The tree is laid out radially: each branch owns a sector around the root and
 its children sit further out inside it, so no two edges ever cross. A branch
 being unfolded takes room from its closed siblings, and the view glides to
 keep the whole tree on the screen. A closed card is just its title and a
-"details" pill; it opens into a panel, which a button can enlarge to fill the
-screen.
+"details" pill; it widens into a panel whose text is typed out as on a
+keyboard. Nodes ride critically damped springs to their places.
 
 The flight mode of the 3D site has no counterpart here, nor do its extra
 cross-branch edges, which a planar drawing cannot have.
@@ -33,8 +32,9 @@ site's data layer, so the two can be kept in sync by copying the folder:
 
 - `identity.ts` — name and URLs;
 - `nodes/structure.ts`, `nodes/labels.ts`, `nodes/icons.ts` — the graph, its
-  labels in both languages, and each node's pictogram;
-- `cards/fr.ts`, `cards/en.ts` — the cards of the leaves;
+  labels, and each node's pictogram (the French labels are kept for the 3D
+  site's sake, unused here);
+- `cards/en.ts` — the cards of the leaves (`cards/fr.ts` likewise unused);
 - `seo.ts` — titles, description, structured data.
 
 Pictograms are Lucide icons copied into `public/icons/` by `npm run icons`;

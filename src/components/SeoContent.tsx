@@ -7,8 +7,7 @@
  * The wrapper is marked aria-hidden so assistive technologies skip it and
  * only encounter the live graph.
  *
- * Both language variants (EN + FR) are rendered with explicit lang attributes
- * so crawlers can index the content in the correct language for each audience.
+ * The 2D site is in English only, so only the English variant is rendered.
  *
  * Data is pulled directly from the portfolio/ data layer so it always stays
  * in sync with what is displayed in the graph.
@@ -16,7 +15,6 @@
 
 import { fullName, jobTitle, seoDescription } from '../../portfolio/seo'
 import { cardContentEn } from '../../portfolio/cards/en'
-import { cardContentFr } from '../../portfolio/cards/fr'
 import { nodeLabels, nodeSubtitles } from '../../portfolio/nodes/labels'
 import { graphStructure } from '../../portfolio/nodes/structure'
 import { githubUrl } from '../../portfolio/identity'
@@ -43,8 +41,8 @@ const diplomaKeys = [
   ...Object.keys(cardContentEn).filter((k) => k.startsWith(KEY_PREFIX_DIPLOMA)),
 ]
 
-const cardContent = { en: cardContentEn, fr: cardContentFr }
-type Lang = 'en' | 'fr'
+const cardContent = { en: cardContentEn }
+type Lang = 'en'
 
 function LangSection({ lang }: { lang: Lang }) {
   const labels = nodeLabels[lang]
@@ -144,7 +142,6 @@ export default function SeoContent() {
   return (
     <div className="visually-hidden" aria-hidden="true">
       <LangSection lang="en" />
-      <LangSection lang="fr" />
     </div>
   )
 }

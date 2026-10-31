@@ -37,9 +37,7 @@ interface GraphNodeProps {
   node: Node
   language: Language
   isHovered: boolean
-  isFocused: boolean
   isWobbling: boolean
-  onToggleFocus: (id: string) => void
 }
 
 /** The contact leaf: a letter and the address, drawn at build time from a secret. */
@@ -64,11 +62,10 @@ function EmailLeaf({ language }: { language: Language }) {
   )
 }
 
-function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleFocus }: GraphNodeProps) {
+function GraphNode({ node, language, isHovered, isWobbling }: GraphNodeProps) {
   const { id, templateKey, label, visualType, href, expanding, expandStartAt, collapsing, collapseRole, collapseStartAt, expanded, position } = node
   const expandNode = useGraphStore((state) => state.expandNode)
   const setHoveredNode = useGraphStore((state) => state.setHoveredNode)
-  const setFocusedCardNodeId = useGraphStore((state) => state.setFocusedCardNodeId)
   const setLastActivatedNodeId = useGraphStore((state) => state.setLastActivatedNodeId)
   const text = copy[language]
 
@@ -140,8 +137,6 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
     if (isInert) return
     if (isCard) {
       playSound(isCardOpen ? 'cardClose' : 'cardOpen')
-      // A card closing leaves focus with it.
-      if (isCardOpen && isFocused) setFocusedCardNodeId(null)
       setIsCardOpen(!isCardOpen)
       setLastActivatedNodeId(id)
       return
@@ -168,7 +163,7 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
   }
 
   const onPointerEnter = () => {
-    if (isInert || isFocused) return
+    if (isInert) return
     setHoveredNode(id)
     playSound('hover')
   }
@@ -193,7 +188,7 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
       let top = 0
       let right = 0
       let bottom = 0
-      for (const part of body.querySelectorAll<HTMLElement>('.disc, .disc-label, .leaf, .card-head, .card-chip, .card, .card-focus')) {
+      for (const part of body.querySelectorAll<HTMLElement>('.disc, .disc-label, .leaf, .card-head, .card-chip, .card')) {
         const rect = part.getBoundingClientRect()
         if (rect.width === 0 && rect.height === 0) continue
         left = Math.min(left, (rect.left - origin.left) / scale)
@@ -222,7 +217,7 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
     isCard ? 'is-card' : '',
     isMain ? '' : 'is-spawning',
     isFolding ? 'is-collapsing' : '',
-    isHovered && !isFocused && !isInert ? 'is-hovered' : '',
+    isHovered && !isInert ? 'is-hovered' : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -257,15 +252,12 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
   } else if (isCard && cardContent) {
     body = (
       <CardNode
-        id={id}
         label={label}
         picture={picture}
         content={cardContent}
         language={language}
         isOpen={isCardOpen}
-        isFocused={isFocused}
         onToggle={activate}
-        onToggleFocus={onToggleFocus}
       />
     )
   } else if (isEmail) {
@@ -305,7 +297,7 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
 
   return (
     <div
-      className={`node${isFocused ? ' is-focused-card' : ''}`}
+      className="node"
       data-node-id={id}
       style={{ transform: `translate(${position[0] * UNIT}px, ${position[1] * UNIT}px)` }}
     >

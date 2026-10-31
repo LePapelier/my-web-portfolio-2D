@@ -21,13 +21,13 @@ import { fullName, siteUrl, githubUrl } from './identity'
 export const searchName = 'Paul Laurent'
 
 /** Your job title shown in the page title, descriptions and structured data. */
-export const jobTitle = 'Doctorant CNRS en vérification formelle'
+export const jobTitle = 'CNRS PhD student in formal verification'
 
 /**
  * A concise description of your portfolio shown in search-result snippets
  * and social-media previews (aim for 120–160 characters).
  */
-export const seoDescription = `${searchName}, doctorant CNRS à l'IRISA, Rennes : vérification formelle de protocoles cryptographiques avec ProVerif. Thèse, parcours et projets.`
+export const seoDescription = `${searchName}, CNRS PhD student at IRISA, Rennes: formal verification of cryptographic protocols with ProVerif. Thesis, background and projects.`
 
 /**
  * Comma-separated keywords that describe your work.
@@ -35,13 +35,13 @@ export const seoDescription = `${searchName}, doctorant CNRS à l'IRISA, Rennes 
  */
 export const seoKeywords = [
   searchName,
-  'doctorant',
+  'PhD student',
   'CNRS',
   'IRISA',
-  'vérification formelle',
-  'protocoles cryptographiques',
+  'formal verification',
+  'cryptographic protocols',
   'ProVerif',
-  'cybersécurité',
+  'cybersecurity',
   'Rennes',
 ]
 

@@ -22,7 +22,7 @@ export interface View {
 export const ZOOM_MIN = 0.3
 export const ZOOM_MAX = 3
 /** The view's centre never leaves this radius around the root, in graph units. */
-const MAX_PAN_RADIUS = 7
+const MAX_PAN_RADIUS = 40
 /** Seconds the view takes to glide to a focused card and back. */
 export const FOCUS_DURATION_S = reducedMotion ? 0.3 : 1
 
@@ -130,11 +130,6 @@ export function isGliding() {
   return glide !== null
 }
 
-/** Moves the end of a glide in progress, for a target that drifts. */
-export function retargetGlide(x: number, y: number) {
-  if (!glide) return
-  glide.to = clampView({ ...glide.to, x, y })
-}
 
 /** Advances a glide in progress; called once a frame. */
 export function tickView(now: number) {

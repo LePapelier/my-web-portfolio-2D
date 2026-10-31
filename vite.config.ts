@@ -21,7 +21,6 @@ import {
   addressLocality,
   addressCountry,
 } from './portfolio/seo'
-import { cardContentFr } from './portfolio/cards/fr'
 import { cardContentEn } from './portfolio/cards/en'
 import { nodeLabels } from './portfolio/nodes/labels'
 import { graphStructure } from './portfolio/nodes/structure'
@@ -50,11 +49,10 @@ const twitterCreatorTag = twitterHandle
   ? `<meta name="twitter:creator" content="@${twitterHandle}" />`
   : `<!-- twitter:creator — add a twitterHandle in portfolio/seo.ts to enable this tag -->`
 
-// ── hreflang alternate links (bilingual EN + FR SPA) ────────────────────────
+// ── hreflang alternate links (English only) ─────────────────────────────────
 const hreflangTags = [
   `<link rel="alternate" hreflang="x-default" href="${canonicalUrl}" />`,
   `<link rel="alternate" hreflang="en"         href="${canonicalUrl}" />`,
-  `<link rel="alternate" hreflang="fr"         href="${canonicalUrl}" />`,
 ].join('\n    ')
 
 // ── JSON-LD Person schema ────────────────────────────────────────────────────
@@ -90,8 +88,8 @@ const escapeHtml = (text: string) =>
 const plainText = (markdown: string) => markdown.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
 const shownKeys = Object.values(graphStructure).flatMap((children) => children.map(({ key }) => key))
 
-function staticSection(lang: 'fr' | 'en') {
-  const cards = lang === 'fr' ? cardContentFr : cardContentEn
+function staticSection(lang: 'en') {
+  const cards = cardContentEn
   const labels = nodeLabels[lang]
   const items = shownKeys
     .filter((key) => cards[key])
@@ -115,7 +113,6 @@ const staticContent = `<div style="position:absolute;width:1px;height:1px;overfl
       <h1>${escapeHtml(searchName)}</h1>
       <p>${escapeHtml(jobTitle)}</p>
       <p>${escapeHtml(seoDescription)}</p>
-      ${staticSection('fr')}
       ${staticSection('en')}
       <p><a href="${githubUrl}">GitHub</a></p>
     </div>`
@@ -169,7 +166,6 @@ const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
     <loc>${canonicalUrl}</loc>
     <xhtml:link rel="alternate" hreflang="x-default" href="${canonicalUrl}"/>
     <xhtml:link rel="alternate" hreflang="en"         href="${canonicalUrl}"/>
-    <xhtml:link rel="alternate" hreflang="fr"         href="${canonicalUrl}"/>
     <lastmod>${lastmod}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>

@@ -137,10 +137,6 @@ a {
   cursor: grabbing;
 }
 
-.viewport.is-focused {
-  cursor: default;
-}
-
 .world {
   position: absolute;
   left: 0;
@@ -171,10 +167,6 @@ a {
   stroke-width: 3px;
 }
 
-.viewport.is-focused .edge {
-  opacity: 0.15;
-}
-
 /* ── Nodes ───────────────────────────────────────────────────────────────── */
 .node {
   position: absolute;
@@ -183,11 +175,6 @@ a {
   /* Laid out in pixels at zoom 1; the world's transform applies the zoom. */
   transform-origin: 0 0;
   transition: opacity 0.35s ease;
-}
-
-.viewport.is-focused .node:not(.is-focused-card) {
-  opacity: 0.12;
-  pointer-events: none;
 }
 
 .node-body {
@@ -411,11 +398,6 @@ a.leaf,
   transform: translate(-50%, -24px);
 }
 
-.node-body.is-hovered .card-pill {
-  color: var(--fg);
-  border-color: var(--fg);
-}
-
 .card-head {
   text-align: center;
   white-space: nowrap;
@@ -438,15 +420,12 @@ a.leaf,
   font-size: 11px;
   letter-spacing: 0.06em;
   color: var(--ink-soft);
+  white-space: nowrap;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
 
-.card-pill {
-  cursor: pointer;
-}
-
-.card-pill:hover,
-.card-toggle:hover .card-chip {
+.card-toggle:hover .card-chip,
+.node-body.is-hovered .card:not(.is-open) .card-chip {
   color: var(--fg);
   border-color: var(--fg);
 }
@@ -457,34 +436,94 @@ a.leaf,
   transition: transform 0.3s ease;
 }
 
-.card.is-open .card-chip svg,
-.card .card-chip svg {
+.card.is-open .card-chip svg {
   transform: rotate(180deg);
 }
 
+/* Closed, the card is nothing but its pill; open, it widens into a panel
+   whose contents unfold beneath the pill. */
 .card {
   position: relative;
-  border: 1px solid var(--fg);
-  border-radius: 12px;
-  background: var(--panel);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
   text-align: left;
   overflow: hidden;
+  transition:
+    width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s ease,
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.card.is-open {
+  border-color: var(--fg);
+  background: var(--panel);
   box-shadow: 0 0 0 1px var(--bg);
-  animation: appear 0.25s ease-out both;
 }
 
 .card-toggle {
-  display: block;
+  display: flex;
+  justify-content: center;
   width: 100%;
-  padding: 12px 14px 0;
+  padding: 0;
   border: 0;
   background: transparent;
-  text-align: left;
   cursor: pointer;
+  transition: padding 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card.is-open .card-toggle {
+  justify-content: flex-start;
+  padding: 12px 14px 0;
+}
+
+/* The details unfold with the 0fr → 1fr grid trick. */
+.card-details {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card.is-open .card-details {
+  grid-template-rows: 1fr;
+}
+
+.card-details > div {
+  overflow: hidden;
+  min-height: 0;
 }
 
 .card-body {
   padding: 10px 14px 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.1s;
+}
+
+.card.is-open .card-body {
+  opacity: 1;
+}
+
+/* Typed text: the whole text holds the room, invisible, and the typed part
+   is drawn over it, so nothing moves as the words arrive. */
+.card-summary,
+.card-list li {
+  position: relative;
+}
+
+.typed-ghost {
+  visibility: hidden;
+}
+
+.typed {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+}
+
+.card-list li .typed {
+  left: 0;
 }
 
 .card-summary {
@@ -527,6 +566,7 @@ a.leaf,
   text-decoration-color: currentColor;
 }
 
+/* The link's button waits for the typing to end. */
 .card-open {
   display: inline-block;
   margin-top: 12px;
@@ -537,46 +577,18 @@ a.leaf,
   letter-spacing: 0.04em;
   text-decoration: none;
   color: var(--accent);
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  opacity: 0;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.3s ease;
+}
+
+.card-open.is-ready {
+  opacity: 1;
 }
 
 .card-open:hover {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--bg);
-}
-
-.card-focus {
-  position: absolute;
-  left: 100%;
-  top: 50%;
-  margin-left: 6px;
-  transform: translateY(-50%);
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ink-soft);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s ease;
-}
-
-.card-focus:hover {
-  color: var(--fg);
-}
-
-.card-focus svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 /* ── Start hint ──────────────────────────────────────────────────────────── */
