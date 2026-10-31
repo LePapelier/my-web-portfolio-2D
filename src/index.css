@@ -148,7 +148,6 @@ a {
   width: 0;
   height: 0;
   transform-origin: 0 0;
-  will-change: transform;
 }
 
 .edges {
@@ -162,18 +161,18 @@ a {
 .edge {
   fill: none;
   stroke: var(--line);
-  stroke-width: 0.03;
+  stroke-width: 2px;
   stroke-linecap: round;
   transition: stroke 0.16s ease, stroke-width 0.16s ease, opacity 0.35s ease;
 }
 
 .edge.is-symmetric {
-  stroke-dasharray: 0.12 0.1;
+  stroke-dasharray: 8 6;
 }
 
 .edge.is-highlighted {
   stroke: var(--fg);
-  stroke-width: 0.045;
+  stroke-width: 3px;
 }
 
 .viewport.is-focused .edge {
@@ -185,8 +184,7 @@ a {
   position: absolute;
   left: 0;
   top: 0;
-  /* Everything inside is laid out in pixels at zoom 1: the world's transform
-     scales it, so the font sizes below are as they read at zoom 1. */
+  /* Laid out in pixels at zoom 1; the world's transform applies the zoom. */
   transform-origin: 0 0;
   transition: opacity 0.35s ease;
 }

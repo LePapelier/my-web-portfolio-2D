@@ -363,7 +363,16 @@ export default function GraphView() {
             const edgeClass = ['edge', edge.symmetric ? 'is-symmetric' : '', highlighted ? 'is-highlighted' : '']
               .filter(Boolean)
               .join(' ')
-            return <line key={edge.key} className={edgeClass} x1={ends[0]} y1={ends[1]} x2={ends[2]} y2={ends[3]} />
+            return (
+              <line
+                key={edge.key}
+                className={edgeClass}
+                x1={ends[0] * UNIT}
+                y1={ends[1] * UNIT}
+                x2={ends[2] * UNIT}
+                y2={ends[3] * UNIT}
+              />
+            )
           })}
         </svg>
 

@@ -63,13 +63,18 @@ export function subscribeView(listener: (view: View) => void): () => void {
   return () => listeners.delete(listener)
 }
 
+/**
+ * The world is laid out in pixels (a graph unit is UNIT pixels) and scaled by
+ * the zoom alone. Scaling it by UNIT instead, with the nodes shrunk back
+ * down, left Safari drawing everything from a tiny raster blown up 64 times.
+ */
 function render() {
   if (!worldElement) return
   const { width, height } = viewportSize
   const scale = view.k * UNIT
   const tx = width / 2 - view.x * scale
   const ty = height / 2 - view.y * scale
-  worldElement.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`
+  worldElement.style.transform = `translate(${tx}px, ${ty}px) scale(${view.k})`
   listeners.forEach((listener) => listener(view))
 }
 

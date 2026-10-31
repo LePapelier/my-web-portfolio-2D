@@ -263,7 +263,7 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
     <div
       className={`node${isFocused ? ' is-focused-card' : ''}`}
       data-node-id={id}
-      style={{ transform: `translate(${position[0]}px, ${position[1]}px) scale(${1 / UNIT})` }}
+      style={{ transform: `translate(${position[0] * UNIT}px, ${position[1] * UNIT}px)` }}
     >
       <div
         className={bodyClass}
