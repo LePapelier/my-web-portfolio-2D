@@ -9,11 +9,14 @@
  *     proportions (largeur sur hauteur) et, au besoin, sa hauteur en
  *     fraction de la taille du texte : un logo, qui garde ses couleurs ;
  *     avec `ink`, un logo monochrome sur fond transparent, dessiné dans la
- *     couleur du texte.
+ *     couleur du texte ; avec `darkImage`, une variante pour le thème sombre
+ *     (un logo dont une partie est noire, par exemple).
  *
  * Un nœud absent de cette liste garde l'emoji choisi par getLabelIcon.
  */
-export type LabelIcon = string | { image: string; aspect: number; scale?: number; ink?: boolean }
+export type LabelIcon =
+  | string
+  | { image: string; aspect: number; scale?: number; ink?: boolean; darkImage?: string }
 
 export const labelIconByTemplateKey: Record<string, LabelIcon> = {
   about: 'user-round',
@@ -40,7 +43,8 @@ export const labelIconByTemplateKey: Record<string, LabelIcon> = {
   'centurion-scheduler': 'cog',
   'project-portfolio': 'orbit',
   'exp-internship-2': 'microscope',
-  'exp-internship-1': 'flask-conical',
+  // Le logo de l'IRT SystemX : un S noir, blanc sur le thème sombre, et un X bleu.
+  'exp-internship-1': { image: 'systemx.png', aspect: 1, scale: 1.05, darkImage: 'systemx-dark.png' },
 }
 
 /** The Lucide icons to generate. */

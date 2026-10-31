@@ -37,6 +37,8 @@ export interface LabelPicture {
   scale?: number
   /** A monochrome logo, drawn in the ink colour rather than its own. */
   ink: boolean
+  /** A variant for the dark theme, when a part of the logo is black. */
+  darkUrl?: string
 }
 
 /**
@@ -46,7 +48,13 @@ export interface LabelPicture {
 export function getLabelPicture(templateKey: string): LabelPicture | null {
   const icon = labelIconByTemplateKey[templateKey]
   if (!icon || typeof icon === 'string') return null
-  return { url: resolveAssetPath(`icons/${icon.image}`), aspect: icon.aspect, scale: icon.scale, ink: !!icon.ink }
+  return {
+    url: resolveAssetPath(`icons/${icon.image}`),
+    darkUrl: icon.darkImage ? resolveAssetPath(`icons/${icon.darkImage}`) : undefined,
+    aspect: icon.aspect,
+    scale: icon.scale,
+    ink: !!icon.ink,
+  }
 }
 
 /** Resolves a portfolio-relative asset path against the app's base URL. */

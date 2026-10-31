@@ -5,8 +5,9 @@ import type { LabelPicture } from './content'
 const LOGO_SCALE = 1.15
 
 /**
- * A title's logo: in its own colours, or, for a monochrome one, drawn as a
- * mask in the ink colour, so it is black on paper and white on slate.
+ * A title's logo: in its own colours, with a variant for the dark theme when
+ * it has one, or, for a monochrome one, drawn as a mask in the ink colour, so
+ * it is black on paper and white on slate.
  */
 export default function Picture({ picture }: { picture: LabelPicture | null }) {
   if (!picture) return null
@@ -15,7 +16,7 @@ export default function Picture({ picture }: { picture: LabelPicture | null }) {
     const style = { '--icon': `url("${picture.url}")`, height: `${height}em`, width: `${height * picture.aspect}em` } as CSSProperties
     return <span className="pictogram" style={style} aria-hidden="true" />
   }
-  return (
+  const image = (
     <img
       className="logo"
       src={picture.url}
@@ -23,5 +24,13 @@ export default function Picture({ picture }: { picture: LabelPicture | null }) {
       style={{ height: `${height}em`, aspectRatio: picture.aspect }}
       draggable={false}
     />
+  )
+  if (!picture.darkUrl) return image
+  // The theme follows the system, so the browser can pick the variant itself.
+  return (
+    <picture>
+      <source srcSet={picture.darkUrl} media="(prefers-color-scheme: dark)" />
+      {image}
+    </picture>
   )
 }
