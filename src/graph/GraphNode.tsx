@@ -18,14 +18,19 @@ import { GithubMark } from '../components/Icons'
 import CardNode from './CardNode'
 import Picture from './Picture'
 
-/** Where a disc's title goes: away from the root, so it never sits on the edge. */
-type LabelSide = 'above' | 'below' | 'left' | 'right'
+/**
+ * Where a disc's title goes: across the ray from the root, since the edges
+ * come in along it from the parent and leave along it towards the children.
+ * Above for a node to the left or right of the centre, beside it for one
+ * above or below.
+ */
+type LabelSide = 'above' | 'left' | 'right'
 
 function labelSideFor(position: [number, number], isMain: boolean): LabelSide {
   if (isMain) return 'above'
   const [x, y] = position
-  if (Math.abs(y) >= Math.abs(x) * 0.6) return y < 0 ? 'above' : 'below'
-  return x < 0 ? 'left' : 'right'
+  if (Math.abs(x) >= Math.abs(y)) return 'above'
+  return x >= 0 ? 'right' : 'left'
 }
 
 interface GraphNodeProps {
@@ -228,8 +233,7 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
     const ringWidth = expanded ? (radius - Math.max(radius * 0.58, 0.03)) * UNIT : 0
     const side = labelSideFor(position, isMain)
     const gap = radius * UNIT + (isMain ? 26 : 20)
-    const labelStyle =
-      side === 'above' ? { top: -gap } : side === 'below' ? { top: gap } : side === 'left' ? { left: -gap } : { left: gap }
+    const labelStyle = side === 'above' ? { top: -gap } : side === 'left' ? { left: -gap } : { left: gap }
     body = (
       <>
         <div
