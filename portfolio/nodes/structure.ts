@@ -22,15 +22,12 @@ export interface StructureChild {
 
 export const graphStructure: Record<string, StructureChild[]> = {
   root: [
-    { key: 'about' },
+    { key: 'about-story' },
+    { key: 'about-location' },
     { key: 'projects' },
     { key: 'experience' },
     { key: 'mail' },
     { key: 'github', href: githubUrl },
-  ],
-  about: [
-    { key: 'about-story' },
-    { key: 'about-location' },
   ],
   'about-story': [
     { key: 'phd' },

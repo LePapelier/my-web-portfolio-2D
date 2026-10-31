@@ -115,10 +115,9 @@ function LangSection({ lang }: { lang: Lang }) {
         </ul>
       </section>
 
-      {/* ── Profile ── */}
+      {/* ── Where, and what is taught ── */}
       <section>
-        <h2>{labels.about}</h2>
-        <p>{labels['about-location']}</p>
+        <h2>{labels['about-location']}</h2>
         {graphStructure.teaching && (
           <p>
             {labels.teaching} ({nodeSubtitles[lang].teaching}):{' '}
