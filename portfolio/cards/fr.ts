@@ -89,10 +89,7 @@ export const cardContentFr: Record<string, CardContent> = {
   },
   'centurion-paper': {
     summaryText: 'Une application web pour convertir des modèles 3D en patrons de papier à découper, plier et coller',
-    detailsText: `
-- Le patron s'exporte en PDF, avec les languettes de collage
-- Fonctionne dans le navigateur, sans rien installer
-`,
+    detailsText: '',
     previewImage: {
       src: 'previews/paper-centurion.webp',
       aspectRatio: 2,
@@ -103,10 +100,7 @@ export const cardContentFr: Record<string, CardContent> = {
   },
   'centurion-scrabble': {
     summaryText: 'Un Scrabble en français, à jouer dans le navigateur contre une IA ou à deux',
-    detailsText: `
-- Cinq niveaux d'adversaire, du débutant au joueur de club
-- Pour jouer à deux, il suffit d'envoyer un lien, sans créer de compte
-`,
+    detailsText: '',
     previewImage: {
       src: 'previews/centurion-scrabble.webp',
       aspectRatio: 2,
@@ -116,10 +110,7 @@ export const cardContentFr: Record<string, CardContent> = {
   },
   'centurion-poker': {
     summaryText: 'Un Texas hold\'em en français, à jouer dans le navigateur contre des IA ou entre amis',
-    detailsText: `
-- Cinq niveaux d'adversaire, du débutant qui paie pour voir au joueur qui calcule tout
-- Jusqu'à six à la même table, il suffit d'envoyer un lien
-`,
+    detailsText: '',
     previewImage: {
       src: 'previews/centurion-poker.webp',
       aspectRatio: 2,

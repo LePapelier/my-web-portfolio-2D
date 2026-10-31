@@ -89,10 +89,7 @@ export const cardContentEn: Record<string, CardContent> = {
   },
   'centurion-paper': {
     summaryText: 'A web app that turns 3D models into paper patterns to cut out, fold and glue',
-    detailsText: `
-- Exports the pattern as a PDF, with glue tabs
-- Runs in the browser, nothing to install
-`,
+    detailsText: '',
     previewImage: {
       src: 'previews/paper-centurion.webp',
       aspectRatio: 2,
@@ -103,10 +100,7 @@ export const cardContentEn: Record<string, CardContent> = {
   },
   'centurion-scrabble': {
     summaryText: 'French Scrabble in the browser, against an AI or with a friend',
-    detailsText: `
-- Five levels of opponent, from beginner to club player
-- To play with a friend, just send them a link, no account needed
-`,
+    detailsText: '',
     previewImage: {
       src: 'previews/centurion-scrabble.webp',
       aspectRatio: 2,
@@ -116,10 +110,7 @@ export const cardContentEn: Record<string, CardContent> = {
   },
   'centurion-poker': {
     summaryText: 'Texas hold\'em in the browser, against AIs or with friends',
-    detailsText: `
-- Five levels of opponent, from the beginner who calls too much to the player who works everything out
-- Up to six at the same table, just send a link
-`,
+    detailsText: '',
     previewImage: {
       src: 'previews/centurion-poker.webp',
       aspectRatio: 2,
