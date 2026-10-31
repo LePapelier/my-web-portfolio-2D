@@ -263,6 +263,15 @@ a.leaf:hover .cta,
   color: var(--fg);
 }
 
+/* A monochrome logo, drawn as a mask so it takes the ink colour. */
+.pictogram {
+  display: inline-block;
+  height: 1em;
+  background: currentColor;
+  mask: var(--icon) center / contain no-repeat;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+}
+
 /* A logo, in its own colours. */
 .logo {
   display: inline-block;

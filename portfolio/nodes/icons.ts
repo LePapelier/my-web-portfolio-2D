@@ -7,11 +7,13 @@
  *     couleur du titre ;
  *   - une petite image en couleurs, déjà dans public/icons/, avec ses
  *     proportions (largeur sur hauteur) et, au besoin, sa hauteur en
- *     fraction de la taille du texte : un logo, qui garde ses couleurs.
+ *     fraction de la taille du texte : un logo, qui garde ses couleurs ;
+ *     avec `ink`, un logo monochrome sur fond transparent, dessiné dans la
+ *     couleur du texte.
  *
  * Un nœud absent de cette liste garde l'emoji choisi par getLabelIcon.
  */
-export type LabelIcon = string | { image: string; aspect: number; scale?: number }
+export type LabelIcon = string | { image: string; aspect: number; scale?: number; ink?: boolean }
 
 export const labelIconByTemplateKey: Record<string, LabelIcon> = {
   about: 'user-round',
@@ -28,8 +30,9 @@ export const labelIconByTemplateKey: Record<string, LabelIcon> = {
   'about-location': 'map-pin',
   // Le logo de la thèse : bouclier, cadenas et piment.
   phd: { image: 'these.webp', aspect: 216 / 264, scale: 1.6 },
-  // Le logo INSA, rouge et gris, devant les deux diplômes.
-  'diploma-1': { image: 'insa.webp', aspect: 895 / 360, scale: 0.8 },
+  // Le logo du master SIF, monochrome : il prend la couleur du texte (`ink`).
+  'diploma-1': { image: 'sif.png', aspect: 1, scale: 1.1, ink: true },
+  // Le logo INSA, rouge et gris, devant le diplôme d'ingénieur.
   'diploma-2': { image: 'insa.webp', aspect: 895 / 360, scale: 0.8 },
   'centurion-paper': 'scissors',
   'centurion-scrabble': { image: 'scrabble-tile.svg', aspect: 1 },

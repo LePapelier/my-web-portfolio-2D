@@ -35,16 +35,18 @@ export interface LabelPicture {
   aspect: number
   /** Height as a fraction of the font size, when the default does not suit. */
   scale?: number
+  /** A monochrome logo, drawn in the ink colour rather than its own. */
+  ink: boolean
 }
 
 /**
- * Only the logos are shown here, in their own colours: the 3D site's line
- * pictograms (a Lucide icon name in the data) are left out of the 2D site.
+ * Only the logos are shown here: the 3D site's line pictograms (a Lucide
+ * icon name in the data) are left out of the 2D site.
  */
 export function getLabelPicture(templateKey: string): LabelPicture | null {
   const icon = labelIconByTemplateKey[templateKey]
   if (!icon || typeof icon === 'string') return null
-  return { url: resolveAssetPath(`icons/${icon.image}`), aspect: icon.aspect, scale: icon.scale }
+  return { url: resolveAssetPath(`icons/${icon.image}`), aspect: icon.aspect, scale: icon.scale, ink: !!icon.ink }
 }
 
 /** Resolves a portfolio-relative asset path against the app's base URL. */
