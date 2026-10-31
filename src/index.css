@@ -374,10 +374,6 @@ a.leaf,
   transition: transform 0.3s ease;
 }
 
-.card.is-open .card-chip svg {
-  transform: rotate(180deg);
-}
-
 /* Closed, the card is nothing but its pill; open, it widens into a panel
    whose contents unfold beneath the pill. */
 .card {
@@ -398,6 +394,23 @@ a.leaf,
   border-color: var(--fg);
   background: var(--panel);
   box-shadow: 0 0 0 1px var(--bg);
+  cursor: pointer;
+}
+
+/* The pill's row folds to nothing once the card is open. */
+.card-pill-row {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card.is-open .card-pill-row {
+  grid-template-rows: 0fr;
+}
+
+.card-pill-row > div {
+  overflow: hidden;
+  min-height: 0;
 }
 
 .card-toggle {
@@ -408,12 +421,11 @@ a.leaf,
   border: 0;
   background: transparent;
   cursor: pointer;
-  transition: padding 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.2s ease;
 }
 
 .card.is-open .card-toggle {
-  justify-content: flex-start;
-  padding: 12px 14px 0;
+  opacity: 0;
 }
 
 /* The details unfold with the 0fr → 1fr grid trick. */
@@ -433,7 +445,7 @@ a.leaf,
 }
 
 .card-body {
-  padding: 10px 14px 14px;
+  padding: 14px 14px 14px;
   opacity: 0;
   transition: opacity 0.3s ease 0.1s;
 }

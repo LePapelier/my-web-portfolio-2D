@@ -41,7 +41,8 @@ function typedSegments(segments: DetailsSegment[], count: number): DetailsSegmen
 /**
  * A leaf with something to say: its title, and under it a "details" pill
  * that widens, on a click, into a panel where the summary, a picture, a few
- * bullets and a link unfold, the text typed out as on a keyboard.
+ * bullets and a link unfold, the text typed out as on a keyboard. A click on
+ * the open panel, away from its links, closes it again.
  */
 function CardNode({ label, picture, content, language, isOpen, onToggle }: CardNodeProps) {
   const text = copy[language]
@@ -95,13 +96,23 @@ function CardNode({ label, picture, content, language, isOpen, onToggle }: CardN
         </span>
       </div>
 
-      <div className={`card${isOpen ? ' is-open' : ''}`} style={{ width: isOpen ? openWidth : CARD_CLOSED_WIDTH }}>
-        <button type="button" className="card-toggle" aria-expanded={isOpen} onClick={onToggle}>
-          <span className="card-chip">
-            {text.details}
-            <ChevronIcon />
-          </span>
-        </button>
+      <div
+        className={`card${isOpen ? ' is-open' : ''}`}
+        style={{ width: isOpen ? openWidth : CARD_CLOSED_WIDTH }}
+        onClick={isOpen ? onToggle : undefined}
+      >
+        {/* The pill folds away once the card is open, leaving the card alone;
+            it stays in the tree for the keyboard and assistive technology. */}
+        <div className="card-pill-row">
+          <div>
+            <button type="button" className="card-toggle" aria-expanded={isOpen} onClick={onToggle}>
+              <span className="card-chip">
+                {text.details}
+                <ChevronIcon />
+              </span>
+            </button>
+          </div>
+        </div>
 
         <div className="card-details" inert={!isOpen}>
           <div>
