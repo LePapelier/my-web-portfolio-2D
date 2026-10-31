@@ -197,49 +197,41 @@ a {
   transform-origin: 0 0;
 }
 
+/* Nodes fade in and out where they stand: nothing grows or shrinks, which
+   would read as coming towards the viewer or going away. */
 .node-body.is-spawning {
-  animation: pop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: appear 0.4s ease-out both;
 }
 
 .node-body.is-collapsing {
-  animation: fold 0.36s cubic-bezier(0.55, 0, 1, 0.45) both;
+  animation: vanish 0.3s ease-in both;
 }
 
-.node-body.is-collapsing.is-card {
-  animation: squish 0.38s ease-in both;
-}
-
-@keyframes pop {
+@keyframes appear {
   from {
-    transform: scale(0.01);
+    opacity: 0;
   }
   to {
-    transform: scale(1);
+    opacity: 1;
   }
 }
 
-@keyframes fold {
+@keyframes vanish {
   to {
-    transform: scale(0.01);
+    opacity: 0;
   }
 }
 
-@keyframes squish {
-  0% {
-    transform: scale(1, 1);
-  }
-  58% {
-    transform: scale(1, 0.001);
-  }
-  100% {
-    transform: scale(0.001, 0.001);
-  }
+/* Under the pointer, a disc gets a halo and a leaf's title its full ink. */
+.node-body.is-hovered .disc {
+  box-shadow: 0 0 0 4px var(--line);
 }
 
-.node-body.is-hovered .disc,
-.node-body.is-hovered .leaf,
-.node-body.is-hovered .disc-label {
-  transform: translate(-50%, -50%) scale(1.11);
+.node-body.is-hovered .disc-label .title,
+.node-body.is-hovered .leaf .title {
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 4px;
 }
 
 /* The disc: full when closed, a ring once opened. */
@@ -252,7 +244,7 @@ a {
   background: var(--fg);
   border: 0 solid var(--fg);
   cursor: pointer;
-  transition: transform 0.16s ease, background-color 0.25s ease, border-width 0.25s ease;
+  transition: box-shadow 0.16s ease, background-color 0.25s ease, border-width 0.25s ease;
 }
 
 .disc.is-open {
@@ -263,12 +255,13 @@ a {
   animation: wobble 0.52s ease-in-out infinite alternate;
 }
 
+/* The invitation: a halo that breathes, rather than a disc that swells. */
 @keyframes wobble {
   from {
-    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 0 0 0 var(--line);
   }
   to {
-    transform: translate(-50%, -50%) scale(1.16);
+    box-shadow: 0 0 0 10px var(--line);
   }
 }
 
@@ -279,7 +272,6 @@ a {
   transform: translate(-50%, -50%);
   white-space: nowrap;
   pointer-events: none;
-  transition: transform 0.16s ease;
 }
 
 /* Beside the disc, the title hangs off it rather than sitting centred on it. */
@@ -289,14 +281,6 @@ a {
 
 .disc-label.is-right {
   transform: translate(0, -50%);
-}
-
-.node-body.is-hovered .disc-label.is-left {
-  transform: translate(-100%, -50%) scale(1.11);
-}
-
-.node-body.is-hovered .disc-label.is-right {
-  transform: translate(0, -50%) scale(1.11);
 }
 
 .title {
@@ -366,7 +350,6 @@ a.leaf:hover .cta,
   text-align: center;
   padding: 6px 10px;
   text-decoration: none;
-  transition: transform 0.16s ease;
 }
 
 a.leaf,
@@ -421,7 +404,6 @@ a.leaf,
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: transform 0.16s ease;
 }
 
 .card-node.is-open {
@@ -429,8 +411,9 @@ a.leaf,
   transform: translate(-50%, -24px);
 }
 
-.node-body.is-hovered .card-node:not(.is-open) {
-  transform: translate(-50%, -50%) scale(1.08);
+.node-body.is-hovered .card-pill {
+  color: var(--fg);
+  border-color: var(--fg);
 }
 
 .card-head {
@@ -486,20 +469,8 @@ a.leaf,
   background: var(--panel);
   text-align: left;
   overflow: hidden;
-  box-shadow: 0 0 0 1px var(--bg), 0 12px 40px -12px var(--fg);
-  transform-origin: 50% 0;
-  animation: unfold 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes unfold {
-  from {
-    opacity: 0;
-    transform: scale(0.85);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  box-shadow: 0 0 0 1px var(--bg);
+  animation: appear 0.25s ease-out both;
 }
 
 .card-toggle {
@@ -591,12 +562,11 @@ a.leaf,
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s ease, transform 0.16s ease;
+  transition: color 0.15s ease;
 }
 
 .card-focus:hover {
   color: var(--fg);
-  transform: translateY(-50%) scale(1.2);
 }
 
 .card-focus svg {
@@ -635,9 +605,6 @@ a.leaf,
 @media (prefers-reduced-motion: reduce) {
   .disc.is-wobbling {
     animation: none;
-  }
-  .node-body.is-spawning {
-    animation-duration: 0.2s;
   }
 }
 
