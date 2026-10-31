@@ -1,9 +1,10 @@
-import { memo, useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { KeyboardEvent, MouseEvent, PointerEvent } from 'react'
 import { useGraphStore } from '../store/useGraphStore'
 import type { Language, Node } from '../store/graph/types'
 import { pitchFromKey, playSound, staggerFromKey } from '../lib/sound'
-import { UNIT } from './viewport'
+import { UNIT, getView } from './viewport'
+import { setNodeBox } from '../store/graph/layout'
 import {
   copy,
   emailLetterSvgPath,
@@ -63,6 +64,7 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
   const expandNode = useGraphStore((state) => state.expandNode)
   const setHoveredNode = useGraphStore((state) => state.setHoveredNode)
   const setFocusedCardNodeId = useGraphStore((state) => state.setFocusedCardNodeId)
+  const setLastActivatedNodeId = useGraphStore((state) => state.setLastActivatedNodeId)
   const text = copy[language]
 
   const cardContent = getCardContent(templateKey, language)
@@ -136,6 +138,7 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
       // A card closing leaves focus with it.
       if (isCardOpen && isFocused) setFocusedCardNodeId(null)
       setIsCardOpen(!isCardOpen)
+      setLastActivatedNodeId(id)
       return
     }
     if (isDisc) expandNode(id)
@@ -168,6 +171,44 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
   const onPointerLeave = () => {
     if (useGraphStore.getState().hoveredNodeId === id) setHoveredNode(null)
   }
+
+  // Tells the layout how big this node is drawn, around its point, and again
+  // whenever that changes: a card opening, a picture arriving, a new label.
+  const bodyRef = useRef<HTMLDivElement | null>(null)
+  useLayoutEffect(() => {
+    const body = bodyRef.current
+    if (!body) {
+      setNodeBox(id, null)
+      return
+    }
+    const measure = () => {
+      const origin = body.getBoundingClientRect()
+      const scale = getView().k * UNIT
+      let left = 0
+      let top = 0
+      let right = 0
+      let bottom = 0
+      for (const part of body.querySelectorAll<HTMLElement>('.disc, .disc-label, .leaf, .card-head, .card-chip, .card, .card-focus')) {
+        const rect = part.getBoundingClientRect()
+        if (rect.width === 0 && rect.height === 0) continue
+        left = Math.min(left, (rect.left - origin.left) / scale)
+        top = Math.min(top, (rect.top - origin.top) / scale)
+        right = Math.max(right, (rect.right - origin.left) / scale)
+        bottom = Math.max(bottom, (rect.bottom - origin.top) / scale)
+      }
+      setNodeBox(id, { left, top, right, bottom })
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    for (const child of body.children) observer.observe(child)
+    const images = body.querySelectorAll('img')
+    images.forEach((image) => image.addEventListener('load', measure))
+    return () => {
+      observer.disconnect()
+      images.forEach((image) => image.removeEventListener('load', measure))
+    }
+  }, [id, isWaiting, isCardOpen, label, language, expanded])
+  useEffect(() => () => setNodeBox(id, null), [id])
 
   if (isWaiting) return null
 
@@ -265,6 +306,7 @@ function GraphNode({ node, language, isHovered, isFocused, isWobbling, onToggleF
       style={{ transform: `translate(${position[0] * UNIT}px, ${position[1] * UNIT}px)` }}
     >
       <div
+        ref={bodyRef}
         className={bodyClass}
         onPointerEnter={onPointerEnter}
         onPointerLeave={onPointerLeave}

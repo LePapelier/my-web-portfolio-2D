@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { useGraphStore } from '../store/useGraphStore'
 import type { Node } from '../store/graph/types'
-import { computeTargets } from '../store/graph/layout'
+import { computeTargets, getBoxesVersion, getNodeBox, subscribeBoxes } from '../store/graph/layout'
 import { playSound } from '../lib/sound'
 import { reducedMotion } from '../lib/motion'
 import {
@@ -32,9 +32,14 @@ const START_HINT_TEXT_DELAY_MS = 10000
 /** Share of the viewport a focused card fills. */
 const FOCUS_FILL = 0.9
 /** Room kept around the tree when the view is fitted to it, in graph units. */
-const FIT_PADDING = 1.7
+const FIT_PADDING = 0.6
+/** Milliseconds the fit waits for the drawings to settle before gliding. */
+const FIT_DELAY_MS = 120
 /** The fit never zooms in past this: a small tree stays at its natural size. */
 const FIT_MAX_ZOOM = 1
+/** Nor out past this: rather than shrink the tree to a thumbnail, the view
+ *  settles on the branch that was just opened. */
+const FIT_MIN_ZOOM = 0.45
 /** Wheel: one notch of 100 zooms by about 16%. */
 const WHEEL_ZOOM_RATE = 0.0015
 
@@ -202,30 +207,53 @@ export default function GraphView() {
     }
   }, [])
 
-  // Whenever a branch opens or closes, the view glides so that the whole
-  // tree, where its nodes are heading, fits on the screen.
+  // Whenever a branch opens or closes, or a node's drawing changes size, the
+  // view glides so that the whole tree, where its nodes are heading, fits on
+  // the screen. When that would shrink it too far, the view settles instead
+  // on the node just opened and its children.
   const structureKey = nodes.map((node) => node.id).join('|')
+  const boxesVersion = useSyncExternalStore(subscribeBoxes, getBoxesVersion)
   useEffect(() => {
-    if (focusedCardNodeIdRef.current) return
-    const current = useGraphStore.getState().nodes
-    const targets = computeTargets(current)
-    let left = Infinity
-    let top = Infinity
-    let right = -Infinity
-    let bottom = -Infinity
-    targets.forEach(([x, y]) => {
-      left = Math.min(left, x)
-      top = Math.min(top, y)
-      right = Math.max(right, x)
-      bottom = Math.max(bottom, y)
-    })
-    if (!Number.isFinite(left)) return
-    const { width, height } = getViewportSize()
-    const spanX = right - left + FIT_PADDING * 2
-    const spanY = bottom - top + FIT_PADDING * 2
-    const k = Math.min(FIT_MAX_ZOOM, width / (spanX * UNIT), height / (spanY * UNIT))
-    glideTo({ x: (left + right) / 2, y: (top + bottom) / 2, k })
-  }, [structureKey])
+    const timeout = window.setTimeout(() => {
+      if (focusedCardNodeIdRef.current) return
+      const state = useGraphStore.getState()
+      const targets = computeTargets(state.nodes)
+      const { width, height } = getViewportSize()
+
+      const fit = (ids: Iterable<string>) => {
+        let left = Infinity
+        let top = Infinity
+        let right = -Infinity
+        let bottom = -Infinity
+        for (const id of ids) {
+          const target = targets.get(id)
+          if (!target) continue
+          const box = getNodeBox(id) ?? { left: -0.5, top: -0.5, right: 0.5, bottom: 0.5 }
+          left = Math.min(left, target[0] + box.left)
+          top = Math.min(top, target[1] + box.top)
+          right = Math.max(right, target[0] + box.right)
+          bottom = Math.max(bottom, target[1] + box.bottom)
+        }
+        if (!Number.isFinite(left)) return null
+        const spanX = right - left + FIT_PADDING * 2
+        const spanY = bottom - top + FIT_PADDING * 2
+        const k = Math.min(FIT_MAX_ZOOM, width / (spanX * UNIT), height / (spanY * UNIT))
+        return { x: (left + right) / 2, y: (top + bottom) / 2, k }
+      }
+
+      const whole = fit(targets.keys())
+      if (!whole) return
+      if (whole.k >= FIT_MIN_ZOOM) {
+        glideTo(whole)
+        return
+      }
+      const activated = state.nodes.find((node) => node.id === state.lastActivatedNodeId)
+      const branch = activated ? fit([activated.id, ...(activated.expanded ? (activated.childrenIds ?? []) : [])]) : null
+      const view = branch ?? whole
+      glideTo({ ...view, k: Math.max(FIT_MIN_ZOOM, view.k) })
+    }, FIT_DELAY_MS)
+    return () => window.clearTimeout(timeout)
+  }, [structureKey, boxesVersion])
 
   // Clear focus when the focused card starts collapsing or disappears.
   useEffect(() => {

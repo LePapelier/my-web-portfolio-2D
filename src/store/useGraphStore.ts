@@ -33,8 +33,10 @@ export const useGraphStore = create<GraphState>((set) => ({
   language: getInitialLanguage(),
   hoveredNodeId: null,
   focusedCardNodeId: null,
+  lastActivatedNodeId: null,
   nodes: initialNodes,
-  expandNode: (id) => set((state) => expandNodeReducer(state, id, set)),
+  expandNode: (id) => set((state) => ({ ...expandNodeReducer(state, id, set), lastActivatedNodeId: id })),
+  setLastActivatedNodeId: (id) => set({ lastActivatedNodeId: id }),
   setLanguage: (language) =>
     set((state) => {
       if (state.language === language) return state

@@ -33,7 +33,10 @@ export interface GraphState {
   language: Language
   hoveredNodeId: string | null
   focusedCardNodeId: string | null
+  /** The node last opened or closed: what the view makes sure to show. */
+  lastActivatedNodeId: string | null
   expandNode: (id: string) => void
+  setLastActivatedNodeId: (id: string | null) => void
   setLanguage: (language: Language) => void
   setHoveredNode: (id: string | null) => void
   setFocusedCardNodeId: (id: string | null) => void
