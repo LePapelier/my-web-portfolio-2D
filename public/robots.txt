@@ -1,0 +1,7 @@
+# Allow all web crawlers to index the portfolio
+User-agent: *
+Allow: /
+
+# Sitemap location. The standard wants an absolute URL: a relative one may be
+# ignored by crawlers.
+Sitemap: https://paul-laurent.fr/my-web-portfolio-2D/sitemap.xml
