@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { applyTheme, followSystemTheme, getInitialTheme } from './lib/theme'
 import type { Theme } from './lib/theme'
 import SeoContent from './components/SeoContent'
-import Toolbar from './components/Toolbar'
 import GraphView from './graph/GraphView'
 
 export default function App() {
@@ -18,7 +17,6 @@ export default function App() {
     <div className="app">
       {/* Visually-hidden HTML content for search-engine indexing */}
       <SeoContent />
-      <Toolbar />
       <GraphView />
     </div>
   )

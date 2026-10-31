@@ -231,10 +231,6 @@ export default defineConfig({
             return 'react-vendor'
           }
 
-          if (id.includes('/tone/')) {
-            return 'sound-vendor'
-          }
-
           if (id.includes('/zustand/')) {
             return 'state-vendor'
           }

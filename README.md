@@ -1,8 +1,8 @@
 # My web portfolio, in 2D
 
 The black-and-white, flat version of my [3D portfolio](https://github.com/LePapelier/LePapelier.github.io):
-the same tree of nodes to unfold, the same cards, the same sounds, drawn in
-plain HTML and SVG rather than WebGL. Ink on paper by day, chalk on slate by
+the same tree of nodes to unfold, the same cards, drawn in plain HTML and
+SVG rather than WebGL, without the sounds. Ink on paper by day, chalk on slate by
 night: the theme follows the system. This version is in English only.
 
 The tree is laid out radially: each branch owns a sector around the root and

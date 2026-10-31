@@ -2,7 +2,6 @@ import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { KeyboardEvent, MouseEvent, PointerEvent } from 'react'
 import { useGraphStore } from '../store/useGraphStore'
 import type { Language, Node } from '../store/graph/types'
-import { pitchFromKey, playSound, staggerFromKey } from '../lib/sound'
 import { UNIT, getView } from './viewport'
 import { setNodeBox } from '../store/graph/layout'
 import {
@@ -100,24 +99,6 @@ function GraphNode({ node, language, isHovered, isWobbling }: GraphNodeProps) {
     return () => window.clearTimeout(timeout)
   }, [foldAt, now, waitUntil])
 
-  // One bubble per node as it pops out, so an expansion reads as a little
-  // burst following the spawn wave rather than a single blip.
-  const hasPlayedSpawnRef = useRef(false)
-  useEffect(() => {
-    if (!expanding || isWaiting || hasPlayedSpawnRef.current) return
-    hasPlayedSpawnRef.current = true
-    playSound('bubble', { pitch: pitchFromKey(id) })
-  }, [expanding, id, isWaiting])
-
-  // …and a ping as it folds away, spread a little among siblings, who
-  // otherwise all leave on the same beat.
-  const hasPlayedCollapseRef = useRef(false)
-  useEffect(() => {
-    if (!collapsing || collapseRole !== 'target' || hasPlayedCollapseRef.current) return
-    hasPlayedCollapseRef.current = true
-    playSound('collapse', { pitch: pitchFromKey(id), delay: staggerFromKey(id) })
-  }, [collapseRole, collapsing, id])
-
   // A card closes as its branch folds. State that follows a prop is reset
   // while rendering, as React recommends, rather than from an effect.
   const [isCardOpen, setIsCardOpen] = useState(false)
@@ -134,7 +115,6 @@ function GraphNode({ node, language, isHovered, isWobbling }: GraphNodeProps) {
     }
     if (isInert) return
     if (isCard) {
-      playSound(isCardOpen ? 'cardClose' : 'cardOpen')
       setIsCardOpen(!isCardOpen)
       setLastActivatedNodeId(id)
       return
@@ -142,13 +122,9 @@ function GraphNode({ node, language, isHovered, isWobbling }: GraphNodeProps) {
     if (isDisc) expandNode(id)
   }
 
-  /** A leaf is a link: the browser opens it, with a sound. */
+  /** A leaf is a link: the browser opens it, unless the node is folding away. */
   const onLinkClick = (event: MouseEvent) => {
-    if (isInert) {
-      event.preventDefault()
-      return
-    }
-    playSound('link')
+    if (isInert) event.preventDefault()
   }
 
   /** A press on a node is for the node: the viewport must not start panning. */
@@ -163,7 +139,6 @@ function GraphNode({ node, language, isHovered, isWobbling }: GraphNodeProps) {
   const onPointerEnter = () => {
     if (isInert) return
     setHoveredNode(id)
-    playSound('hover')
   }
 
   const onPointerLeave = () => {

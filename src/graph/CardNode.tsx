@@ -2,7 +2,6 @@ import { memo, useMemo } from 'react'
 import type { MouseEvent } from 'react'
 import type { CardContent } from '../../portfolio/types'
 import type { Language } from '../store/graph/types'
-import { playSound } from '../lib/sound'
 import { copy, parseDetails, resolveAssetPath } from './content'
 import type { DetailsSegment, LabelPicture } from './content'
 import { ChevronIcon } from '../components/Icons'
@@ -73,10 +72,7 @@ function CardNode({ label, picture, content, language, isOpen, onToggle }: CardN
   const [typedSummary, ...typedLines] = typedParagraphs
   const isTyped = typedCount >= Array.from(typedText).length
 
-  const onLinkClick = (event: MouseEvent) => {
-    event.stopPropagation()
-    playSound('link')
-  }
+  const onLinkClick = (event: MouseEvent) => event.stopPropagation()
 
   const renderSegments = (segments: DetailsSegment[]) =>
     segments.map((segment, index) =>
